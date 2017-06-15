@@ -13,7 +13,13 @@ writeIRAPfull <- function(
                          tooSlowMessageShowTimeMS=600
 ) {
 
+    library(jsonlite)
+  
+    cat("writeIRAPfull\n")
+  
     irapname <- IRAPname
+
+    cat("Create param files\n")
     
     params <- {}
     if (correct.error) {
@@ -30,7 +36,7 @@ writeIRAPfull <- function(
 
     params$reverseAnswers <- 0
     params$practiceMode <- 0
-    
+
     codePARAMS_test_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
     
     params$reverseAnswers <- 1
@@ -42,6 +48,8 @@ writeIRAPfull <- function(
 
     params$reverseAnswers <- 1
     codePARAMS_practice_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
+
+    cat("Create stimuli files\n")
     
     posstim <- data.frame(stimulus=paste("<b style='color:",catCol,"'>",poswords,"</b>",sep=""),
                                          correct="NA", index=1)
@@ -67,6 +75,8 @@ writeIRAPfull <- function(
       "Bstim =",toJSON(Bstim),";\n",
       sep="")
 
+    cat("Reading static files\n")
+    
     x <- system.file("codefiles", "codeA.js", package="irapgen")
     codeA <- readChar(x,file.info(x)$size) 
     
@@ -91,6 +101,7 @@ writeIRAPfull <- function(
     # test negative
     js_tn<-paste(codeA, codeIMG, codeB, codePARAMS_test_neg, codeSTIM, codeC,sep="")
 
+    cat("Create directories\n")
     
     d1 <- paste("1 ",irapname,"_pp", sep='')
     d2 <- paste("2 ",irapname,"_pn", sep='')
@@ -101,6 +112,8 @@ writeIRAPfull <- function(
     dir.create(paste(getwd(),"/",d2,sep=""),showWarnings = FALSE)
     dir.create(paste(getwd(),"/",d3,sep=""),showWarnings = FALSE)
     dir.create(paste(getwd(),"/",d4,sep=""),showWarnings = FALSE)
+
+    cat("Copy html files\n")
     
     file.copy(system.file("codefiles", "html_template_practice.html", package="irapgen"), 
               paste(getwd(),"/",d1,"/Q1 h.txt",sep="") )
@@ -113,6 +126,8 @@ writeIRAPfull <- function(
     
     file.copy(system.file("codefiles", "html_template_test.html", package="irapgen"), 
               paste(getwd(),"/",d4,"/Q4 h.txt",sep="") )    
+ 
+    cat("Create js files\n")
     
     writeChar(js_pp, paste(getwd(),"/",d1,"/Q1 J.txt",sep="") )
     writeChar(js_pn, paste(getwd(),"/",d2,"/Q2 J.txt",sep="") )
