@@ -147,7 +147,7 @@ writeIRAPfull <- function(
     file.copy(system.file("codefiles", qsfTemplate, package="irapgen"), file.path(getwd()))
     
     filename = function() {
-      paste('irap-', irapname, '.qsf', sep='')
+      paste('IRAP-', irapname, '.qsf', sep='')
     }
     
     library(jsonlite)
@@ -236,7 +236,8 @@ writeIRAPfull <- function(
       }
     }
     
-    cat("Generating JSON....\n")
+    fname <- filename()
+    cat(paste("Generating JSON....",fname,"\n"),sep="")
     qjson <- toJSON(q,null="null",auto_unbox=T)
     minify(qjson)
     write(qjson, filename())

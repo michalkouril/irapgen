@@ -324,7 +324,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
          responseList.sort();
          medianResponse = responseList[responseList.length/2];
 			input.value += "END";
-         if (practiceMode==1 && medianResponse<=2000 && countCorrect/countTotal>=0.80) {
+         if (practiceMode==1 && medianResponse<=tooSlowMessageMS && countCorrect/countTotal>=0.80) {
 			   input.value += ",OK"; // signal to proceed
          }
 
