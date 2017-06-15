@@ -1,0 +1,29 @@
+<html>
+<body>
+Preview<br>
+
+    <input type="TEXT" autocomplete="off" id="QR~QID1" 
+           value="" class="InputText QWatchTimer" name="QR~QID1~TEXT" data-runtime-textvalue="runtime.Value" style="display: none;">
+    <input id="NextButton" class="NextButton Button" title="  &gt;&gt;  " type="button" name="NextButton" 
+           value="  &gt;&gt;  " data-runtime-disabled="runtime.Disabled" data-runtime-aria-label="runtime.ariaLabel" 
+           data-runtime-hide="runtime.Hide" page-id="P_1488199519543" aria-label="Next" style="" onclick="return Qualtrics.loadNext(this);">
+<!-- HTML -->
+
+      <script type="text/javascript">
+      var Qualtrics = { SurveyEngine: { addOnload: function(f) { f.call(Qualtrics); }  },
+                        questionId:"QID1",
+       hideNextButton: function() {},
+       hidePrevButton: function() {},
+       loadNext: function() {
+         var input = document.getElementById("QR~" + Qualtrics.questionId);
+         alert(input.value);
+         document.getElementById("previewNextQuestion").click();
+         return true;
+       }
+      };
+      <!-- Qualtrics.SurveyEngine.addOnload = function(f) { alert("here"); /*f.call(Qualtrics);*/}', -->
+
+<!-- JS -->
+      </script>
+</body>
+</html>

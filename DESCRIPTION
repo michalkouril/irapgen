@@ -1,0 +1,14 @@
+Package: irapgen
+Type: Package
+Title: Generates IRAPs for Qualtrics
+Version: 10.0.00-0
+Date: 2017-05-07
+Author: Michal Kouril, Tom Carpenter
+Maintainer: Michal Kouril <xmkouril@gmail.com>
+Description: Package generates and analyzes IRAPs for use in Qualtrics.
+License: GPL-3
+Imports:
+    stringr,
+    jsonlite
+RoxygenNote: 5.0.1
+Suggests: testthat
