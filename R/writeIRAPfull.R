@@ -8,6 +8,7 @@ writeIRAPfull <- function(
                          Bwords, 
                          qsf=FALSE,
                          pause=250,
+                         stimuliShowCount=12,
                          correct.error=T,
                          tooSlowMessageMS=2000,
                          tooSlowMessageShowTimeMS=600
@@ -28,7 +29,7 @@ writeIRAPfull <- function(
       params$forceErrorCorrection <- 0
     }
     params$interQuestionDelay <- pause
-    params$stimuliShowCount <- 12
+    params$stimuliShowCount <- stimuliShowCount
     params$leftKeyChar <- "D"
     params$rightKeyChar <- "K"
     params$tooSlowMessageMS <- tooSlowMessageMS
