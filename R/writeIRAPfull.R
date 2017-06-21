@@ -7,10 +7,11 @@ writeIRAPfull <- function(
                          Awords, 
                          Bwords, 
                          qsf=FALSE,
+                         qsfTemplate=NULL,
                          pause=250,
                          stimuliShowCount=12,
                          correct.error=T,
-                         showAlternateCategory=T,
+                         showAlternateCategory=F,
                          tooSlowMessageMS=2000,
                          tooSlowMessageShowTimeMS=600
 ) {
@@ -137,13 +138,15 @@ writeIRAPfull <- function(
   ## if qsf argument is true, make a qsf file
   if(qsf==T){
     
-    qsfTemplate="IRAP_V3.qsf"
+    if (is.null(qsfTemplate)) {
+      qsfTemplate=system.file("codefiles", "IRAP_V3.qsf", package="irapgen")
+    }
     
     #code below uses lowercase
     irapname <- IRAPname
     
     #copy the template file to the wd
-    file.copy(system.file("codefiles", qsfTemplate, package="irapgen"), file.path(getwd()))
+    file.copy(qsfTemplate, file.path(getwd()))
     
     filename = function() {
       paste('IRAP-', irapname, '.qsf', sep='')
@@ -173,7 +176,7 @@ writeIRAPfull <- function(
     })
     
     
-    cat("Replacing html and Javascript content....\n")
+    cat("Replacing html and Javascript content....",qsfTemplate,"\n")
     for (i in 1:length(q$SurveyElements$Payload)) {
       m <- 0
       if (is.list(q$SurveyElements$Payload[i][[1]])) {
