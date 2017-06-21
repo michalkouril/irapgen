@@ -118,6 +118,10 @@ Qualtrics.SurveyEngine.addOnload(function() {
          practiceMode=initParams.practiceMode;
          console.log("set practiceMode to "+practiceMode);
       }
+      if ("showAlternateCategory" in initParams) {
+         showAlternateCategory=initParams.showAlternateCategory;
+         console.log("set showAlternateCategory to "+showAlternateCategory);
+      }
       /*
          forceErrorCorrection=("forceErrorCorrection" in initParams)?forceErrorCorrection:initParams.forceErrorCorrection;
          reverseAnswers=("reverseAnswers" in initParams)?reverseAnswers:initParams.reverseAnswers;
