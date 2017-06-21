@@ -10,6 +10,7 @@ writeIRAPfull <- function(
                          pause=250,
                          stimuliShowCount=12,
                          correct.error=T,
+                         showAlternateCategory=T,
                          tooSlowMessageMS=2000,
                          tooSlowMessageShowTimeMS=600
 ) {
@@ -23,11 +24,8 @@ writeIRAPfull <- function(
     cat("Create param files\n")
     
     params <- {}
-    if (correct.error) {
-      params$forceErrorCorrection <- 1
-    } else {
-      params$forceErrorCorrection <- 0
-    }
+    params$forceErrorCorrection <- as.integer(correct.error)
+    params$showAlternateCategory <- as.integer(showAlternateCategory)
     params$interQuestionDelay <- pause
     params$stimuliShowCount <- stimuliShowCount
     params$leftKeyChar <- "D"

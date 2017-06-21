@@ -23,6 +23,9 @@ trialsPerBlock=48
 minMedianToProceed=2000
 minAccuracyToProceed=0.80
 
+# make sure the category alternate
+showAlternateCategory=0
+
 # this is setup in Qualtrics flow
 # maxPracticeBlocks=6
 # minPracticeBlocks=2
@@ -40,22 +43,22 @@ catB=bad
 
 cat - > codePARAMS_practice_pos.js <<EOF
 /* GENERATED */
-initParams = { forceErrorCorrection:1, reverseAnswers:0, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:1 };
+initParams = { forceErrorCorrection:1, reverseAnswers:0, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:1, showAlternateCategory:$showAlternateCategory };
 EOF
 
 cat - > codePARAMS_practice_neg.js <<EOF
 /* GENERATED */
-initParams = { forceErrorCorrection:1, reverseAnswers:1, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:1 };
+initParams = { forceErrorCorrection:1, reverseAnswers:1, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:1, showAlternateCategory:$showAlternateCategory  };
 EOF
 
 cat - > codePARAMS_test_pos.js <<EOF
 /* GENERATED */
-initParams = { forceErrorCorrection:1, reverseAnswers:0, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:0 };
+initParams = { forceErrorCorrection:1, reverseAnswers:0, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:0, showAlternateCategory:$showAlternateCategory };
 EOF
 
 cat - > codePARAMS_test_neg.js <<EOF
 /* GENERATED */
-initParams = { forceErrorCorrection:1, reverseAnswers:1, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:0 };
+initParams = { forceErrorCorrection:1, reverseAnswers:1, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:0, showAlternateCategory:$showAlternateCategory };
 EOF
 
 (

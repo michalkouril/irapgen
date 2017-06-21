@@ -8,6 +8,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
    var endMessage=0;
    // FIXME: number of stimuli * 2 (number of categories)
    var stimuliShowCount=12; // divisible by 4 // 48;
+   var showAlternateCategory=0;
    var leftKeyChar="D";
    var rightKeyChar="K";
    var tooSlowMessageMS=2000; // show "too slow" message if tooSlowMessageMS response time exceeded
@@ -166,6 +167,39 @@ Qualtrics.SurveyEngine.addOnload(function() {
             }
             index++;
          }
+         return 1;
+   }
+
+   // alternating category feature
+   function alternateCategory(array) {
+         if (array.length==1) return 1;
+
+         var index=1;
+         while(index<array.length) {
+            current = array[index];
+            prev = array[index-1];
+
+            // make sure we don't have 
+            // # The trials are presented quasirandomly, with the typical constraint that none of the four trial types be presented twice in succession.
+            if (current.category==prev.category) {
+               // find next non-matching category and swap
+               nextIndex=index+1;
+			      while(nextIndex<array.length && current.category==array[nextIndex].category) {
+					    nextIndex++;
+			      }
+
+			      // if we couldn't find alternating category
+				   if (nextIndex==array.length) return 0;
+
+               // And swap it with the current element.
+               temporaryValue = array[index];
+               array[index] = array[nextIndex];
+               array[nextIndex] = temporaryValue;
+			      continue; // try again
+            }
+            index++;
+         }
+         return 1;
    }
 	
 	// FUNCTION 1 - IMAGE LOADER
@@ -254,11 +288,12 @@ Qualtrics.SurveyEngine.addOnload(function() {
       stimBuilder(Bstim, stimuli, cutoffs[2], cutoffs[3], posstim[0].stimulus, keyBtoPosStim, 3 );
       stimBuilder(Bstim, stimuli, cutoffs[3], cutoffs[4], negstim[0].stimulus, keyBtoNegStim, 4 );
 
-      shuffle(stimuli);
-      while(validateStimuliOrdering(stimuli)==0) { 
+      while(1) {
          shuffle(stimuli);
+         if (showAlternateCategory==1 && alternateCategory(stimuli)==0) continue;
+         if (validateStimuliOrdering(stimuli)==0) continue;
+	      break;
       }
-
 
 		message = document.getElementById("message");
 		category = document.getElementById("category");
