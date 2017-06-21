@@ -10,8 +10,8 @@ writeIRAPfull <- function(
                          qsfTemplate=NULL,
                          pause=250,
                          stimuliShowCount=12,
-                         correct.error=T,
-                         showAlternateCategory=F,
+                         correct.error=TRUE,
+                         showAlternateCategory=FALSE,
                          tooSlowMessageMS=2000,
                          tooSlowMessageShowTimeMS=600
 ) {
