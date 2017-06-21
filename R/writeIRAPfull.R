@@ -7,10 +7,11 @@ writeIRAPfull <- function(
                          Awords, 
                          Bwords, 
                          qsf=FALSE,
+                         qsfTemplate=NULL,
                          pause=250,
                          stimuliShowCount=12,
                          correct.error=T,
-                         showAlternateCategory=T,
+                         showAlternateCategory=F,
                          tooSlowMessageMS=2000,
                          tooSlowMessageShowTimeMS=600
 ) {
@@ -137,7 +138,9 @@ writeIRAPfull <- function(
   ## if qsf argument is true, make a qsf file
   if(qsf==T){
     
-    qsfTemplate="IRAP_V3.qsf"
+    if (is.null(qsfTemplate)) {
+      qsfTemplate="IRAP_V3.qsf"
+    }
     
     #code below uses lowercase
     irapname <- IRAPname
