@@ -6,14 +6,15 @@ Qualtrics.SurveyEngine.addOnload(function() {
    var practiceStatsTimeMS=1000;
    var interQuestionDelay=250; // or 400
    var endMessage=0;
-   // FIXME: number of stimuli * 2 (number of categories)
-   var stimuliShowCount=12; // divisible by 4 // 48;
-   var showAlternateCategory=0;
+   var stimuliShowCount=0; // 0 -- show all combinations 2*(Astim + Bstim)
    var leftKeyChar="D";
    var rightKeyChar="K";
    var tooSlowMessageMS=2000; // show "too slow" message if tooSlowMessageMS response time exceeded
    var tooSlowMessageShowTimeMS=600; // show "too slow" message for this amount of time
-   var practiceMode=1; // show stats after each practice
+   var practiceMode=1; // evaluate responses to pass practice (append ,OK if success)
+   var practiceSuccessThreasholdCorrect=0.80; // minimum % of correct answers to pass practice
+   var practiceSuccessThreasholdMedianMS=2000; // minimum median time to pass practice
+   var showPracticeStats=1; // show stats (success rate, median time) at the end of each practice block
 
    var leftKey=leftKeyChar.charCodeAt(0);
    var rightKey=rightKeyChar.charCodeAt(0);
@@ -73,7 +74,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 
    function setInitParams() {
       // initParams exist
-      if (typeof initParams == 'undefined' ) { // || !( initParams instanceof Array ) ) {
+      if (typeof initParams == 'undefined' ) {
          console.log("initParams doesn't exist");
          return;
       }
@@ -114,13 +115,21 @@ Qualtrics.SurveyEngine.addOnload(function() {
          tooSlowMessageShowTimeMS=initParams.tooSlowMessageShowTimeMS;
          console.log("set tooSlowMessageShowTimeMS to "+tooSlowMessageShowTimeMS);
       }
+      if ("practiceSuccessThreasholdCorrect" in initParams) {
+         practiceSuccessThreasholdCorrect=initParams.practiceSuccessThreasholdCorrect;
+         console.log("set practiceSuccessThreasholdCorrect to "+practiceSuccessThreasholdCorrect);
+      }
+      if ("practiceSuccessThreasholdMedianMS" in initParams) {
+         practiceSuccessThreasholdMedianMS=initParams.practiceSuccessThreasholdMedianMS;
+         console.log("set practiceSuccessThreasholdMedianMS to "+practiceSuccessThreasholdMedianMS);
+      }
       if ("practiceMode" in initParams) {
          practiceMode=initParams.practiceMode;
          console.log("set practiceMode to "+practiceMode);
       }
-      if ("showAlternateCategory" in initParams) {
-         showAlternateCategory=initParams.showAlternateCategory;
-         console.log("set showAlternateCategory to "+showAlternateCategory);
+      if ("showPracticeStats" in initParams) {
+         showPracticeStats=initParams.showPracticeStats;
+         console.log("set showPracticeStats to "+showPracticeStats);
       }
       /*
          forceErrorCorrection=("forceErrorCorrection" in initParams)?forceErrorCorrection:initParams.forceErrorCorrection;
@@ -168,38 +177,6 @@ Qualtrics.SurveyEngine.addOnload(function() {
             // # The trials are presented quasirandomly, with the typical constraint that none of the four trial types be presented twice in succession.
             if (current.trialType==prev.trialType) {
                return 0;
-            }
-            index++;
-         }
-         return 1;
-   }
-
-   // alternating category feature
-   function alternateCategory(array) {
-         if (array.length==1) return 1;
-
-         var index=1;
-         while(index<array.length) {
-            current = array[index];
-            prev = array[index-1];
-
-            // make sure we don't have 
-            // # The trials are presented quasirandomly, with the typical constraint that none of the four trial types be presented twice in succession.
-            if (current.category==prev.category) {
-               // find next non-matching category and swap
-               nextIndex=index+1;
-			      while(nextIndex<array.length && current.category==array[nextIndex].category) {
-					    nextIndex++;
-			      }
-
-			      // if we couldn't find alternating category
-				   if (nextIndex==array.length) return 0;
-
-               // And swap it with the current element.
-               temporaryValue = array[index];
-               array[index] = array[nextIndex];
-               array[nextIndex] = temporaryValue;
-			      continue; // try again
             }
             index++;
          }
@@ -258,17 +235,14 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	so we can write data to the question by editing that value. It also sets instructions to null. It then shuffles stimuli and
 	starts the first trial. */
 	 function start() {
+        console.log("start");
+
        endMessage=0;
 
-      //EMPTY SET OF TRIALS - LOADS FROM POOLS ABOVE
       //BUILD TRIALS
-      precreateStimuliArray(stimuliShowCount);
 
-      var cutoffs = [0, stimuli.length/4, stimuli.length/2, 3*stimuli.length/4, stimuli.length];
-
-      // FIXME: make sure 
+      // FEATURE: 
       // # The positioning of the two response options is also quasirandom in that typically they cannot appear in the same left–right position three times in succession.
-    
 
       var keyAtoPosStim;
       var keyAtoNegStim;
@@ -287,16 +261,21 @@ Qualtrics.SurveyEngine.addOnload(function() {
          keyBtoNegStim=rightKey;
       }
 
-      stimBuilder(Astim, stimuli, cutoffs[0], cutoffs[1], posstim[0].stimulus, keyAtoPosStim, 1 );
-      stimBuilder(Astim, stimuli, cutoffs[1], cutoffs[2], negstim[0].stimulus, keyAtoNegStim, 2 );
-      stimBuilder(Bstim, stimuli, cutoffs[2], cutoffs[3], posstim[0].stimulus, keyBtoPosStim, 3 );
-      stimBuilder(Bstim, stimuli, cutoffs[3], cutoffs[4], negstim[0].stimulus, keyBtoNegStim, 4 );
+      stimBuilder(stimuli, Astim, posstim[0].stimulus, keyAtoPosStim, 1 );
+      stimBuilder(stimuli, Astim, negstim[0].stimulus, keyAtoNegStim, 2 );
+      stimBuilder(stimuli, Bstim, posstim[0].stimulus, keyBtoPosStim, 3 );
+      stimBuilder(stimuli, Bstim, negstim[0].stimulus, keyBtoNegStim, 4 );
 
       while(1) {
          shuffle(stimuli);
-         if (showAlternateCategory==1 && alternateCategory(stimuli)==0) continue;
+         shuffle(stimuli);
+         shuffle(stimuli);
          if (validateStimuliOrdering(stimuli)==0) continue;
 	      break;
+      }
+
+      if (stimuliShowCount != 0 && stimuliShowCount < stimuliCount) {
+         stimuli.length = stimuliShowCount; // trim the length of the stimuli
       }
 
 		message = document.getElementById("message");
@@ -318,7 +297,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 		//ADD NOTE BELOW WINDOW
 		note = document.getElementById("note");
 		note.innerHTML = "";
-	
+
       // COUNTER
       countCorrect=0;
       countTotal=0;
@@ -339,7 +318,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			// SET MESSAGE TO EMPTY
 			message.innerHTML = "";
 			category.innerHTML = "";
-				
+
+         console.log("trial "+currentStimulus.category+" "+currentStimulus.stimulus);
+
 			// DECLARE START OF CURRENT STIMULUS
 			currentStimulus.start = new Date().getTime();
 
@@ -363,11 +344,12 @@ Qualtrics.SurveyEngine.addOnload(function() {
          responseList.sort();
          medianResponse = responseList[responseList.length/2];
 			input.value += "END";
-         if (practiceMode==1 && medianResponse<=tooSlowMessageMS && countCorrect/countTotal>=0.80) {
+         if (practiceMode==1 && medianResponse <= practiceSuccessThreasholdMedianMS && countCorrect/countTotal >= practiceSuccessThreasholdCorrect) {
 			   input.value += ",OK"; // signal to proceed
          }
 
-         if (practiceMode==1) {
+         console.log("Output="+input.value);
+         if (practiceMode == 1 && showPracticeStats == 1) {
             currentStimulus=0;
             endMessage=1;
             setTimeout(function() {
@@ -437,7 +419,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 		//IF THE KEYCODE MATCHES THE CORRECT PART OF CURRENT STIMULUS, WRITE TO DATA AND DO OTHER STEPS
 		//TRADITIONAL ERROR MODE
 		if (keyCode === currentStimulus.correct) {				
-			input.value += currentStimulus.index + "C" + currentStimulus.reactionTime + ",";	
+			input.value += currentStimulus.trialType + "T" + currentStimulus.index + "C" + currentStimulus.reactionTime + ",";	
 			message.innerHTML = "<br><br><br>+";
 			currentStimulus = null;
          countCorrect++;
@@ -452,7 +434,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			return setTimeout(function() {return nextQuestion(); }, interQuestionDelay);
 	
 		} else {
-			input.value += currentStimulus.index + "X" + currentStimulus.reactionTime + ",";
+			input.value += currentStimulus.trialType + "T" + currentStimulus.index + "X" + currentStimulus.reactionTime + ",";
 			message.innerHTML = "<b style='color:red;font-size:80px'><br><br>X</b>";
 			currentStimulus = null;
          countTotal++;
@@ -486,10 +468,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			keyCode = e.keyCode;
 		}
 			
-		// IF NO CURRENT STIMULUS (ONLY HAPPENS PRIOR TO START OF IAT), SPACEBAR CAN START IAT
+		// IF NO CURRENT STIMULUS (ONLY HAPPENS PRIOR TO START OF IRAP, OR AFTER END MESSAGE STATS), SPACEBAR CAN START IAT
 		if (!currentStimulus) {
 			if (keyCode === 32) {
-            console.log("space and endMessage="+endMessage);
             if (endMessage==1) {
                document.removeEventListener('keyup', keyCheckForcedError, false); 
                if (document.getElementById('NextButton')) document.getElementById('NextButton').click();
@@ -515,13 +496,13 @@ Qualtrics.SurveyEngine.addOnload(function() {
          responseList.push(currentStimulus.reactionTime);
 
 			if (fix==0){
-				input.value += currentStimulus.index + "C" + currentStimulus.reactionTime + ",";	
+				input.value += currentStimulus.trialType + "T" + currentStimulus.index + "C" + currentStimulus.reactionTime + ",";	
             countCorrect++;
             countTotal++;
 			}
 
 			if (fix==1){
-				input.value += currentStimulus.index + "X" + currentStimulus.reactionTime + ",";	// score as error if we had to correct
+				input.value += currentStimulus.trialType + "T" + currentStimulus.index + "X" + currentStimulus.reactionTime + ",";	// score as error if we had to correct
             countTotal++;
 			}
 
@@ -544,35 +525,17 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	};
 
 
-   function precreateStimuliArray(count) {
-      for(var i=0;i<count;i++) {
-         stimuli.push({stimulus: "", correct: "", index: "", trialType: 0});
-      }
-   }
-	
-	//FUNCTION 6 - TAKES CONTENTS FROM A STIMULI POOL AND PLACES INTO PORTION OF AN OBJECT
-	/* This function takes items from a given stimuli pool and places it randomly into portions of a destination object (positions
-	between start and end). This is used, for example, to take portions of posstim and put it into a portion of the final 
-	stimuli object, or to move contents into intermediate objects that can then be placed (in alternating order) into a
-	final stimuli object. */
-	
-	function stimBuilder(array, destination, start, end, cat, correct, trialType){
-		var i = start;
-		while(i<end){
-			shuffle(array);
-			for(var j=0; j<array.length; j++){
-				destination[i].stimulus= array[j].stimulus;
-				destination[i].index= array[j].index;
-				destination[i].correct= correct;
-				destination[i].category= cat;
-				destination[i].trialType= trialType;
-				i++;
-				if (i === end){return;}
-			}
+	//FUNCTION 6 - TAKES CONTENTS FROM A STIMULI POOL AND PLACES INTO STIMULI OBJECT
+	function stimBuilder(destination, array, category, correct, trialType){
+      for(i=0;i<array.length;i++) {
+         stimuli.push({stimulus: array[i].stimulus, 
+                          index: array[i].index,
+                          correct: correct, 
+                          category: category,
+                          trialType: trialType
+         });
 		}
 	}
-	
-	
 
 	
 	//FUNCTION 7 - FOR COMBINED BLOCKS WITH ALTERNATING FORMAT ONLY
@@ -605,6 +568,12 @@ Qualtrics.SurveyEngine.addOnload(function() {
 		}
 	}
 
+   // After this define data and start
+   // Astim = 
+   // Bstim = 
+   // image_srcs =
+   // initParams = 
+   // setInitParams
 	
 
 	//  IAT CONTENTS 

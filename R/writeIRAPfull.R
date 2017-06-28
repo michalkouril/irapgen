@@ -13,7 +13,10 @@ writeIRAPfull <- function(
                          correct.error=TRUE,
                          showAlternateCategory=FALSE,
                          tooSlowMessageMS=2000,
-                         tooSlowMessageShowTimeMS=600
+                         tooSlowMessageShowTimeMS=600,
+                         practiceSuccessThreasholdCorrect=0.80,
+                         practiceSuccessThreasholdMedianMS=2000,
+                         showPracticeStats=1
 ) {
 
     library(jsonlite)
@@ -33,6 +36,9 @@ writeIRAPfull <- function(
     params$rightKeyChar <- "K"
     params$tooSlowMessageMS <- tooSlowMessageMS
     params$tooSlowMessageShowTimeMS <- tooSlowMessageShowTimeMS
+    params$practiceSuccessThreasholdCorrect <- practiceSuccessThreasholdCorrect
+    params$practiceSuccessThreasholdMedianMS <- practiceSuccessThreasholdMedianMS
+    params$showPracticeStats <- showPracticeStats
 
     params$reverseAnswers <- 0
     params$practiceMode <- 0

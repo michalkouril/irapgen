@@ -35,6 +35,9 @@ showAlternateCategory=0
 # this is setup in Qualtrics flow
 # totalTestBlocks=6
 
+# show all stimuli
+stimuliShowCount=0
+
 tgtA="calm relaxed comfortable content"
 tgtB="nervous anxious afraid"
 
@@ -43,22 +46,22 @@ catB=bad
 
 cat - > codePARAMS_practice_pos.js <<EOF
 /* GENERATED */
-initParams = { forceErrorCorrection:1, reverseAnswers:0, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:1, showAlternateCategory:$showAlternateCategory };
+initParams = { forceErrorCorrection:1, reverseAnswers:0, interQuestionDelay:$interQuestionMS, stimuliShowCount:$stimuliShowCount, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:1, practiceSuccessThreasholdCorrect:0.80, practiceSuccessThreasholdMedianMS:2000, showPracticeStats:1 };
 EOF
 
 cat - > codePARAMS_practice_neg.js <<EOF
 /* GENERATED */
-initParams = { forceErrorCorrection:1, reverseAnswers:1, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:1, showAlternateCategory:$showAlternateCategory  };
+initParams = { forceErrorCorrection:1, reverseAnswers:1, interQuestionDelay:$interQuestionMS, stimuliShowCount:$stimuliShowCount, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:1, practiceSuccessThreasholdCorrect:0.80, practiceSuccessThreasholdMedianMS:2000, showPracticeStats:1  };
 EOF
 
 cat - > codePARAMS_test_pos.js <<EOF
 /* GENERATED */
-initParams = { forceErrorCorrection:1, reverseAnswers:0, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:0, showAlternateCategory:$showAlternateCategory };
+initParams = { forceErrorCorrection:1, reverseAnswers:0, interQuestionDelay:$interQuestionMS, stimuliShowCount:$stimuliShowCount, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:0 };
 EOF
 
 cat - > codePARAMS_test_neg.js <<EOF
 /* GENERATED */
-initParams = { forceErrorCorrection:1, reverseAnswers:1, interQuestionDelay:$interQuestionMS, stimuliShowCount:12, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:0, showAlternateCategory:$showAlternateCategory };
+initParams = { forceErrorCorrection:1, reverseAnswers:1, interQuestionDelay:$interQuestionMS, stimuliShowCount:$stimuliShowCount, leftKeyChar:"D", rightKeyChar:"K", tooSlowMessageMS:2000, tooSlowMessageShowTimeMS:600, practiceMode:0 };
 EOF
 
 (
