@@ -11,7 +11,6 @@ writeIRAPfull <- function(
                          pause=250,
                          stimuliShowCount=12,
                          correct.error=TRUE,
-                         showAlternateCategory=FALSE,
                          tooSlowMessageMS=2000,
                          tooSlowMessageShowTimeMS=600,
                          practiceSuccessThreasholdCorrect=0.80,
@@ -29,7 +28,6 @@ writeIRAPfull <- function(
     
     params <- {}
     params$forceErrorCorrection <- as.integer(correct.error)
-    params$showAlternateCategory <- as.integer(showAlternateCategory)
     params$interQuestionDelay <- pause
     params$stimuliShowCount <- stimuliShowCount
     params$leftKeyChar <- "D"
