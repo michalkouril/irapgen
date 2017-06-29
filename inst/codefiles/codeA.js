@@ -283,6 +283,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 		statusMessage = document.getElementById("statusMessage");
 		error = document.getElementById("error"); //USED ONLY WITH FORCED ERROR CORRECTION
 		input = document.getElementById("QR~QID" + qID);
+      input.value = ""; // MAKE SURE WE START WITH AN EMPTY OUTPUT
 		ansleft = document.getElementById("ansleft");
 		ansright = document.getElementById("ansright");
 
