@@ -14,7 +14,7 @@ writeIRAPfull <- function(
                          qsf=FALSE,
                          qsfTemplate=NULL,
                          pause=250,
-                         stimuliShowCount=12,
+                         stimuliShowCount=0,
                          correct.error=TRUE,
                          tooSlowMessageMS=2000,
                          tooSlowMessageShowTimeMS=600,
