@@ -9,6 +9,10 @@ Description: Package generates and analyzes IRAPs for use in Qualtrics.
 License: GPL-3
 Imports:
     stringr,
-    jsonlite
+    jsonlite,
+    plyr,
+    dplyr,
+    tidyr,
+    reshape2
 RoxygenNote: 5.0.1
 Suggests: testthat
