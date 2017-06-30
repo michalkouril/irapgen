@@ -21,13 +21,12 @@
 #   if (length(new.pkg)) 
 #     install.packages(new.pkg, dependencies = TRUE)
 # }
-# packages <- c("plyr", "dplyr", "tidyr", "data.table")
+# packages <- c("plyr", "dplyr", "tidyr")
 # auto_install_dependencies(packages)
 
 library(plyr)
 library(dplyr)
 library(tidyr)
-library(data.table)
 
 # NB Given the shared namespaces between plyr and dplyr (e.g., both 
 # contain functions called "rename"), this script specifies which 
@@ -55,8 +54,7 @@ processIRAPDataQualtrics <- function(data,
   library(dplyr)
   library(tidyr)
   library(reshape2)
-  # library(data.table)
-  
+
 
 data_format <- "^([0-9])[T]([0-9]*)([CX])([0-9]*)$"
 # \\1 trial type
