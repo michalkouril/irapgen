@@ -51,6 +51,12 @@ processIRAPDataQualtrics <- function(data,
                          fastprt.percent=.10, 
                          fastprt.ms=300) {
   
+  library(plyr)
+  library(dplyr)
+  library(tidyr)
+  library(reshape2)
+  # library(data.table)
+  
 
 data_format <- "^([0-9])[T]([0-9]*)([CX])([0-9]*)$"
 # \\1 trial type
@@ -198,7 +204,6 @@ filtered_cleaned_df <-
          (fasttrial.drop==FALSE | rt >= fasttrial.ms) &
          (!is.na(test_block_pair))
          ) # test blocks only
-  
 
 # mean rt
 mean_rt_df <-  
@@ -302,9 +307,10 @@ percentage_accuracy_and_fast_trials_df <-
   filter(!is.na(test_block_pair)) %>%  # test blocks only
   dplyr::summarize(percentage_accuracy = round(sum(accuracy)/n(), 3),
                    percent_fast_trials = sum(too_fast_trial)/n()) %>%  # arbitrary number of test block trials
-  dplyr::mutate(exclude_based_on_fast_trials = ifelse(fastprt.drop==TRUE && percent_fast_trials>=fastprt.percent, TRUE, FALSE)) %>%  
+  dplyr::mutate(exclude_based_on_fast_trials = ifelse(fastprt.drop==TRUE & percent_fast_trials>=fastprt.percent, TRUE, FALSE)) %>%  
   select(unique_identifier,
          percentage_accuracy,
+         percent_fast_trials,
          exclude_based_on_fast_trials)
 
 
@@ -325,7 +331,41 @@ output_df <-
   rowwise() %>%
   mutate(passed_practice_blocks = ifelse(!is.na(D1), TRUE, FALSE))
  
-  return(output_df)
+  # reliability
+  # splithalfcorr <- cor(D1, D2, use="pairwise.complete.obs")
+  # reliability <- (2*splithalfcorr) / (1 + splithalfcorr)
+  # return(list(reliability=reliability, splithalfcorr=splithalfcorr, D.odd = D1_odd_df$D1_odd, D.even = D1_even_df$D1_even))
+
+  # calculate rates of dropping
+  num.timeout.removed <- nrow(cleaned_df %>% filter((timeout.drop==TRUE & rt > timeout.ms) & (!is.na(test_block_pair))))
+  num.fasttrial.removed <- nrow(cleaned_df %>% filter((fasttrial.drop==TRUE & rt < fasttrial.ms) &(!is.na(test_block_pair))))
+  num.trials <- nrow(cleaned_df)
+  timeout.rate <- num.timeout.removed / num.trials
+  fasttrial.rate <- num.fasttrial.removed / num.trials
+  fastprt.count <- sum(output_df$exclude_based_on_fast_trials,na.rm=T)
+  fastprt.rate <- sum(output_df$exclude_based_on_fast_trials,na.rm=T) / nrow(output_df)
+  error.num.prt = sum(cleaned_df$accuracy) 
+  error.rate.prt = sum(cleaned_df$accuracy) / nrow(cleaned_df)
+
+  return(list(
+    # skipped=skipped,
+    timeout.drop=timeout.drop,
+    timeout.ms=timeout.ms,
+    num.timeout.removed=num.timeout.removed,
+    timeout.rate=timeout.rate,
+    fasttrial.drop=fasttrial.drop,
+    fasttrial.ms=fasttrial.ms,
+    num.fasttrial.removed=num.fasttrial.removed,
+    fasttrial.rate=fasttrial.rate,
+    fastprt.drop=fastprt.drop,
+    fastprt.ms=fastprt.ms,
+    fastprt.percent=fastprt.percent,
+    fastprt.count=fastprt.count,
+    fastprt.rate=fastprt.rate,
+    error.num.prt=error.num.prt,
+    error.rate.prt=error.rate.prt,
+    output_df=output_df
+  ))
 }
 
 
