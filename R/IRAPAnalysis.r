@@ -38,10 +38,10 @@ library(data.table)
 # data acquisition and cleaning -------------------------------------------
 
 # input_csv <- read.csv("~/CCHMC/Projects/IAT_IRAP/Chad/IRAPirap5many.csv")
-# process_qualtrics_data(input_csv)
+# processIRAPDataQualtrics(input_csv)
 
 # expects data from qualtrics with PP1,PN1,PP2,PN2,PP3,PN3,TP1,TN1,TP2,TN2,TP3,TN3 columns
-process_qualtrics_data <- function(data, 
+processIRAPDataQualtrics <- function(data, 
                          unique_identifier_column="V1",
                          timeout.drop=TRUE, 
                          timeout.ms=10000, 
@@ -49,9 +49,7 @@ process_qualtrics_data <- function(data,
                          fasttrial.ms=400, 
                          fastprt.drop=TRUE, 
                          fastprt.percent=.10, 
-                         fastprt.ms=300, 
-                         error.penalty=FALSE, 
-                         error.penalty.ms=600) {
+                         fastprt.ms=300) {
   
 
 data_format <- "^([0-9])[T]([0-9]*)([CX])([0-9]*)$"
@@ -194,13 +192,18 @@ n_pairs_practice_blocks_df <-
 
  # D1 scores and mean latency ----------------------------------------------
 
+filtered_cleaned_df <-
+  cleaned_df %>%
+  filter((timeout.drop==FALSE | rt <= timeout.ms) &
+         (fasttrial.drop==FALSE | rt >= fasttrial.ms) &
+         (!is.na(test_block_pair))
+         ) # test blocks only
+  
 
 # mean rt
 mean_rt_df <-  
-  cleaned_df %>%
+  filtered_cleaned_df %>%
   group_by(unique_identifier) %>%
-  filter(rt <= 10000 &
-           !is.na(test_block_pair)) %>%  # test blocks only
   dplyr::summarize(rt_mean = round(mean(rt, na.rm = TRUE), 3)*1000) %>%
   select(unique_identifier, 
          rt_mean) %>%
@@ -208,11 +211,9 @@ mean_rt_df <-
 
 # D1 calculated from all test block rts
 D1_df <-  
-  cleaned_df %>%
+  filtered_cleaned_df %>%
   group_by(unique_identifier,
            test_block_pair) %>%
-  filter(rt <= 10000 &
-           !is.na(test_block_pair)) %>%  # test blocks only
   dplyr::summarize(rt_a_mean = mean(rt_a, na.rm = TRUE),
                    rt_b_mean = mean(rt_b, na.rm = TRUE),
                    rt_sd = sd(rt)) %>%
@@ -227,12 +228,10 @@ D1_df <-
 
 # D1 calculated for each of the four trial-types from all test block rts
 D1_by_tt_df <-  
-  cleaned_df %>%
+  filtered_cleaned_df %>%
   group_by(unique_identifier,
            test_block_pair,
            trial_type) %>%
-  filter(rt <= 10000 &
-           !is.na(test_block_pair)) %>%  # test blocks only
   dplyr::summarize(rt_a_mean = mean(rt_a, na.rm = TRUE),
                    rt_b_mean = mean(rt_b, na.rm = TRUE),
                    rt_sd = sd(rt)) %>%
@@ -254,12 +253,10 @@ D1_by_tt_df <-
 # D1 for ODD trials by order of presentation (for split half reliability) calculated from all test block rts
 # NB internal consistency can be calculated by a spearman brown correlation or cronbach's alpha between odd and even D1 scores. Pearson's R is less appropriate.
 D1_odd_df <-  
-  cleaned_df %>%
+  filtered_cleaned_df %>%
   group_by(unique_identifier,
            test_block_pair) %>%
-  filter(rt <= 10000 &
-           !is.na(test_block_pair) &
-           trial_order %% 2 == 0) %>%  # odd trials only, nb count starts at 0
+  filter(trial_order %% 2 == 0) %>%  # odd trials only, nb count starts at 0
   dplyr::summarize(rt_a_mean = mean(rt_a, na.rm = TRUE),
                    rt_b_mean = mean(rt_b, na.rm = TRUE),
                    rt_sd = sd(rt)) %>%
@@ -274,12 +271,10 @@ D1_odd_df <-
 
 # D1 for EVEN trials by order of presentation (for split half reliability) calculated from all test block rts
 D1_even_df <-  
-  cleaned_df %>%
+  filtered_cleaned_df %>%
   group_by(unique_identifier,
            test_block_pair) %>%
-  filter(rt <= 10000 &
-           !is.na(test_block_pair) &
-           trial_order %% 2 == 1) %>%  # even trials only, nb count starts at 0
+  filter(trial_order %% 2 == 1) %>%  # even trials only, nb count starts at 0
   dplyr::summarize(rt_a_mean = mean(rt_a, na.rm = TRUE),
                    rt_b_mean = mean(rt_b, na.rm = TRUE),
                    rt_sd = sd(rt)) %>%
@@ -298,7 +293,7 @@ D1_even_df <-
 
 # add new column that records if RT < 300ms.
 # exclusions based on fast trials (>10% trials <300ms) is part of the D1 algorithm
-cleaned_df$too_fast_trial <- ifelse(cleaned_df$rt < .3, 1, 0) 
+cleaned_df$too_fast_trial <- ifelse(cleaned_df$rt < fastprt.ms, 1, 0) 
 
 # calculate % acc and % fast trials from test block data
 percentage_accuracy_and_fast_trials_df <- 
@@ -307,7 +302,7 @@ percentage_accuracy_and_fast_trials_df <-
   filter(!is.na(test_block_pair)) %>%  # test blocks only
   dplyr::summarize(percentage_accuracy = round(sum(accuracy)/n(), 3),
                    percent_fast_trials = sum(too_fast_trial)/n()) %>%  # arbitrary number of test block trials
-  dplyr::mutate(exclude_based_on_fast_trials = ifelse(percent_fast_trials>=0.1, TRUE, FALSE)) %>%  
+  dplyr::mutate(exclude_based_on_fast_trials = ifelse(fastprt.drop==TRUE && percent_fast_trials>=fastprt.percent, TRUE, FALSE)) %>%  
   select(unique_identifier,
          percentage_accuracy,
          exclude_based_on_fast_trials)
