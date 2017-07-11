@@ -15,16 +15,20 @@ writeIRAPfull <- function(
                          qsfTemplate=NULL,
                          pause=250,
                          stimuliShowCount=0,
+                         stimuliShowShortPracticeCount=4,
                          correct.error=TRUE,
                          tooSlowMessageMS=2000,
                          tooSlowMessageShowTimeMS=600,
                          practiceSuccessThreasholdCorrect=0.80,
                          practiceSuccessThreasholdMedianMS=2000,
                          showPracticeStats=1,
-                         qsfQSP="Q4 SP",
-                         qsfQOP="Q6 OP",
-                         qsfQST="Q8 ST",
-                         qsfQOT="Q10 OT"
+                         qsfQSSP="Q60 SSP",    # short SAME practice
+                         qsfQSOP="Q57 SOP",    # short OPPOSITE practice
+                         qsfQSP="Q4 SP",     # SAME practice
+                         qsfQOP="Q6 OP",     # OPPOSITE practice
+                         qsfQST="Q8 ST",     # SAME test
+                         qsfQOT="Q10 OT"    # OPPOSITE test
+                         
 ) {
 
     library(jsonlite)
@@ -57,13 +61,22 @@ writeIRAPfull <- function(
     params$reverseAnswers <- 1
     codePARAMS_test_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
-    params$reverseAnswers <- 0
     params$practiceMode <- 1
+    params$reverseAnswers <- 0
     codePARAMS_practice_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
     params$reverseAnswers <- 1
     codePARAMS_practice_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
+    params$stimuliShowCount <- stimuliShowShortPracticeCount
+    params$reverseAnswers <- 0
+    codePARAMS_short_practice_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
+    
+    params$reverseAnswers <- 1
+    codePARAMS_short_practice_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
+    
+    
+       
     cat("Create stimuli files\n")
     
     posstim <- data.frame(stimulus=paste("<b style='color:",catCol,"'>",poswords,"</b>",sep=""),
@@ -104,6 +117,12 @@ writeIRAPfull <- function(
     x <- system.file("codefiles", "codeC.txt", package="irapgen")
     codeC <- readChar(x,file.info(x)$size) 
     
+    # short practice positive
+    js_spp<-paste(codeA, codeIMG, codeB, codePARAMS_short_practice_pos, codeSTIM, codeC,sep="")
+    
+    # short practice negative
+    js_spn<-paste(codeA, codeIMG, codeB, codePARAMS_short_practice_neg, codeSTIM, codeC,sep="")
+    
     # practice positive
     js_pp<-paste(codeA, codeIMG, codeB, codePARAMS_practice_pos, codeSTIM, codeC,sep="")
     
@@ -116,18 +135,18 @@ writeIRAPfull <- function(
     # test negative
     js_tn<-paste(codeA, codeIMG, codeB, codePARAMS_test_neg, codeSTIM, codeC,sep="")
 
-    cat("Create directories\n")
+    cat("Create directory\n")
   
-    # create files for Qualtrics 
-    # irapname/qsfQSP_[Jh].txt
-    # irapname/qsfQOP_[Jh].txt
-    # irapname/qsfQST_[Jh].txt
-    # irapname/qsfQOP_[Jh].txt
-    
     prjDir <- irapname;
     dir.create(paste(getwd(),"/",prjDir,sep=""),showWarnings = FALSE)
 
     cat("Copy html files\n")
+ 
+    file.copy(system.file("codefiles", "html_template_practice.html", package="irapgen"), 
+              paste(getwd(),"/",prjDir,"/",qsfQSSP,"_h.txt",sep="") )
+    
+    file.copy(system.file("codefiles", "html_template_practice.html", package="irapgen"), 
+              paste(getwd(),"/",prjDir,"/",qsfQSOP,"_h.txt",sep="") )
     
     file.copy(system.file("codefiles", "html_template_practice.html", package="irapgen"), 
               paste(getwd(),"/",prjDir,"/",qsfQSP,"_h.txt",sep="") )
@@ -143,6 +162,8 @@ writeIRAPfull <- function(
  
     cat("Create js files\n")
     
+    writeChar(js_spp, paste(getwd(),"/",prjDir,"/",qsfQSSP,"_J.txt",sep="") )
+    writeChar(js_spn, paste(getwd(),"/",prjDir,"/",qsfQSOP,"_J.txt",sep="") )
     writeChar(js_pp, paste(getwd(),"/",prjDir,"/",qsfQSP,"_J.txt",sep="") )
     writeChar(js_pn, paste(getwd(),"/",prjDir,"/",qsfQOP,"_J.txt",sep="") )
     writeChar(js_tp, paste(getwd(),"/",prjDir,"/",qsfQST,"_J.txt",sep="") )
@@ -153,7 +174,7 @@ writeIRAPfull <- function(
   if(qsf==T){
     
     if (is.null(qsfTemplate)) {
-      qsfTemplate=system.file("codefiles", "IRAP_V6.qsf", package="irapgen")
+      qsfTemplate=system.file("codefiles", "IRAP_V7.qsf", package="irapgen")
     }
     
     #copy the template file to the wd
@@ -173,7 +194,7 @@ writeIRAPfull <- function(
     filecontent <- c()
     qsfPageReplaced <- c()
 
-    for (qsfBlock in c(qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
+    for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
        qsfFile<-paste(qsfBlock,"_h.txt",sep="")
        qsfFileFullPath<-paste(getwd(),"/",prjDir,"/",qsfFile,sep="")
        filecontent[[qsfFile]]<-readChar(qsfFileFullPath, file.info(qsfFileFullPath)$size)
@@ -187,7 +208,7 @@ writeIRAPfull <- function(
     
     
     cat("Replacing html and Javascript content....",qsfTemplate,"\n")
-    for (qsfBlock in c(qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
+    for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
        for (i in 1:length(q$SurveyElements$Payload)) {
           m <- 0
           if (is.list(q$SurveyElements$Payload[i][[1]])) {
@@ -238,7 +259,7 @@ writeIRAPfull <- function(
        }
     }
     
-    for (qsfBlock in c(qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
+    for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
        if (is.character(q$SurveyElements$Payload$DataExportTag)) {
           for (i in 1:length(q$SurveyElements$Payload$DataExportTag)) {
              m <- length(grep(qsfBlock, q$SurveyElements$Payload$DataExportTag[i]))

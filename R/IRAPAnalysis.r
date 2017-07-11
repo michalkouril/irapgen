@@ -27,6 +27,7 @@
 library(plyr)
 library(dplyr)
 library(tidyr)
+library(reshape2)
 
 # NB Given the shared namespaces between plyr and dplyr (e.g., both 
 # contain functions called "rename"), this script specifies which 
