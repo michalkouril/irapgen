@@ -9,8 +9,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
    var stimuliShowCount=0; // 0 -- show all combinations 2*(Astim + Bstim)
    var leftKeyChar="D";
    var rightKeyChar="K";
-   var tooSlowMessageMS=2000; // show "too slow" message if tooSlowMessageMS response time exceeded
-   var tooSlowMessageShowTimeMS=600; // show "too slow" message for this amount of time
+   var tooSlowMessageMS=2000; // show "too slow" upperstim if tooSlowMessageMS response time exceeded
+   var tooSlowMessageShowTimeMS=600; // show "too slow" upperstim for this amount of time
    var practiceMode=1; // evaluate responses to pass practice (append ,OK if success)
    var practiceSuccessThreasholdCorrect=0.80; // minimum % of correct answers to pass practice
    var practiceSuccessThreasholdMedianMS=2000; // minimum median time to pass practice
@@ -26,7 +26,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	var images; 
 	var loadedImages;
 	var input; 
-	var message;
+	var upperstim;
    var statusMessage;
 	var stimuli = [];
 	var note;
@@ -203,7 +203,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			images[images.length - 1].src = src;
 			
 			images[images.length - 1].onerror = function() {
-				alert("Your web browser encountered an issue running this portion of the study. You will be skipped ahead. You may have to click through this message several times.");
+				alert("Your web browser encountered an issue running this portion of the study. You will be skipped ahead. You may have to click through this upperstim several times.");
             if (document.getElementById('NextButton')) document.getElementById('NextButton').click();
 			};
 			
@@ -231,7 +231,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 
 	// FUNCTION 3 - START FUNCTION
 	/* Runs when the spacebar is pressed after the keypress listener has begun. Does initial houskeeping (grabs HTML content
-	such as message, error, etc. and makes it so we can write to them). It sets as 'input' the contents of the question text box,
+	such as upperstim, error, etc. and makes it so we can write to them). It sets as 'input' the contents of the question text box,
 	so we can write data to the question by editing that value. It also sets instructions to null. It then shuffles stimuli and
 	starts the first trial. */
 	 function start() {
@@ -262,8 +262,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
       }
 
       stimBuilder(stimuli, Astim, posstim[0].stimulus, keyAtoPosStim, 1 );
-      stimBuilder(stimuli, Astim, negstim[0].stimulus, keyAtoNegStim, 2 );
-      stimBuilder(stimuli, Bstim, posstim[0].stimulus, keyBtoPosStim, 3 );
+      stimBuilder(stimuli, Bstim, posstim[0].stimulus, keyBtoPosStim, 2 );
+      stimBuilder(stimuli, Astim, negstim[0].stimulus, keyAtoNegStim, 3 );
       stimBuilder(stimuli, Bstim, negstim[0].stimulus, keyBtoNegStim, 4 );
 
       while(1) {
@@ -278,8 +278,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
          stimuli.length = stimuliShowCount; // trim the length of the stimuli
       }
 
-		message = document.getElementById("message");
-		category = document.getElementById("category");
+		upperstim = document.getElementById("upperstim");
+		lowerstim = document.getElementById("lowerstim");
 		statusMessage = document.getElementById("statusMessage");
 		error = document.getElementById("error"); //USED ONLY WITH FORCED ERROR CORRECTION
 		input = document.getElementById("QR~QID" + qID);
@@ -317,22 +317,18 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			currentStimulus = stimuli.pop();
 				
 			// SET MESSAGE TO EMPTY
-			message.innerHTML = "";
-			category.innerHTML = "";
+			upperstim.innerHTML = "";
+			lowerstim.innerHTML = "";
 
          console.log("trial "+currentStimulus.category+" "+currentStimulus.stimulus);
 
 			// DECLARE START OF CURRENT STIMULUS
 			currentStimulus.start = new Date().getTime();
 
-			category.innerHTML += addlines + currentStimulus.category;
+			lowerstim.innerHTML += addlines + currentStimulus.category;
+         upperstim.innerHTML += addlines + currentStimulus.stimulus;
 				
-			// FOR IMAGES, USE APPEND CHILD TO DISPLAY. IF NOT, ADD STIMULUS VALUE TO MESSAGE.
-			if (typeof currentStimulus.stimulus === 'object') {
- 				return message.appendChild(currentStimulus.stimulus);
-			} else {
- 				return message.innerHTML += addlines + currentStimulus.stimulus;
- 			}
+ 			return;
 
 		} else {
 
@@ -340,8 +336,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
          ansleft.style.display="none";
          ansright.style.display="none";
 
-         message.innerHTML = "";
-         category.innerHTML = "";
+         upperstim.innerHTML = "";
+         lowerstim.innerHTML = "";
          responseList.sort();
          medianResponse = responseList[responseList.length/2];
 			input.value += "END";
@@ -355,7 +351,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
             endMessage=1;
             setTimeout(function() {
                statusMessage.innerHTML = "Success rate: "+Math.round(100*countCorrect/countTotal)+"%<br>Median response: "+medianResponse+ "ms";
-               message.innerHTML = "Press <b>space</b> to continue.";
+               upperstim.innerHTML = "Press <b>space</b> to continue.";
                /*setTimeout(function() {
                   if (document.getElementById('NextButton')) document.getElementById('NextButton').click();
                }, practiceStatsTimeMS);
@@ -378,8 +374,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	
 	// FUNCTION 5 - KEYPRESS LISTENER FOR STANDARD ERROR MODE
 	/* This function grabs whatever key was pressed and saves it as keyCode. Depending on what was pressed, it will
-	start the IAT, write data, display next trials, etc. Note that errors are handled by swapping the message out 
-	for a red X (the error message below the stimulus is NOT used). Note also that an alternative version of this
+	start the IAT, write data, display next trials, etc. Note that errors are handled by swapping the upperstim out 
+	for a red X (the error upperstim below the stimulus is NOT used). Note also that an alternative version of this
 	function is defined below but only ONE will be called in a given IAT.*/
 	 function keyCheck(e) {
 		var keyCode;
@@ -421,7 +417,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 		//TRADITIONAL ERROR MODE
 		if (keyCode === currentStimulus.correct) {				
 			input.value += currentStimulus.trialType + "T" + currentStimulus.index + "C" + currentStimulus.reactionTime + ",";	
-			message.innerHTML = "<br><br><br>+";
+			upperstim.innerHTML = "<br><br><br>+";
 			currentStimulus = null;
          countCorrect++;
          countTotal++;
@@ -436,7 +432,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	
 		} else {
 			input.value += currentStimulus.trialType + "T" + currentStimulus.index + "X" + currentStimulus.reactionTime + ",";
-			message.innerHTML = "<b style='color:red;font-size:80px'><br><br>X</b>";
+			upperstim.innerHTML = "<b style='color:red;font-size:80px'><br><br>X</b>";
 			currentStimulus = null;
          countTotal++;
          if (currentStimulus.reactionTime>=tooSlowMessageMS) {
@@ -446,7 +442,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
          } else {
 			   // error.innerHTML = "";
          }
-			setTimeout(function() {return message.innerHTML = "<br><br><br>+";}, 250);
+			setTimeout(function() {return upperstim.innerHTML = "<br><br><br>+";}, 250);
 			return setTimeout(function() {return nextQuestion();}, interQuestionDelay);
 		}
 	};
@@ -512,7 +508,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			   // error.innerHTML = "too slow";
             setTimeout(function() {statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
          }
-			// message.innerHTML = "<br><br><br>+";
+			// upperstim.innerHTML = "<br><br><br>+";
 			fix=0;
 			currentStimulus = null;
 			error.innerHTML = "";
@@ -529,7 +525,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	//FUNCTION 6 - TAKES CONTENTS FROM A STIMULI POOL AND PLACES INTO STIMULI OBJECT
 	function stimBuilder(destination, array, category, correct, trialType){
       for(i=0;i<array.length;i++) {
-         stimuli.push({stimulus: array[i].stimulus, 
+         destination.push({stimulus: array[i].stimulus, 
                           index: array[i].index,
                           correct: correct, 
                           category: category,
@@ -538,36 +534,6 @@ Qualtrics.SurveyEngine.addOnload(function() {
 		}
 	}
 
-	
-	//FUNCTION 7 - FOR COMBINED BLOCKS WITH ALTERNATING FORMAT ONLY
-	/* For combined blocks with an alternating form, this function is used to transfer stimuli from 
-	intermediary pools (cats and tgts) into the final stimuli object in an alternating format */
-	function altStimuil(){
-		
-		//CREATE INDICES OF ALTERNATING NUMBERS TO USE FOR TGT AND CAT TRIALS
-		var j = 0;
-		for(var i = 1; i < stimuli.length; i += 2) { 
-			tgtnum[j] = i; // starts at 1
-			catnum[j] = (i-1); // starts at 0
-			j++; // represents position in tgt/cat number array
-		}
-	
-		// FOR ALL TARGETS, MOVE CONTENTS FROM TARGET INTO STIMULI USING TGTNUM TO INDEX TRIALS
-		for (var i = 0; i < tgts.length; i++){
-			var alternating = tgtnum[i];
-			stimuli[alternating].stimulus = tgts[i].stimulus;
-			stimuli[alternating].correct = tgts[i].correct;
-			stimuli[alternating].index = tgts[i].index;
-		}
-		
-		// FOR ALL CATEGORIES, MOVE CONTENTS FROM TARGET INTO STIMULI USING CATNUM TO INDEX TRIALS
-		for (var i = 0; i < cats.length; i++){
-			var alternating = catnum[i];
-			stimuli[alternating].stimulus = cats[i].stimulus;
-			stimuli[alternating].correct = cats[i].correct;
-			stimuli[alternating].index = cats[i].index;
-		}
-	}
 
    // After this define data and start
    // Astim = 
