@@ -261,10 +261,10 @@ Qualtrics.SurveyEngine.addOnload(function() {
          keyBtoNegStim=rightKey;
       }
 
-      stimBuilder(stimuli, Astim, posstim[0].stimulus, keyAtoPosStim, 1 );
-      stimBuilder(stimuli, Bstim, posstim[0].stimulus, keyBtoPosStim, 2 );
-      stimBuilder(stimuli, Astim, negstim[0].stimulus, keyAtoNegStim, 3 );
-      stimBuilder(stimuli, Bstim, negstim[0].stimulus, keyBtoNegStim, 4 );
+      stimBuilder(Astim, posstim[0].stimulus, keyAtoPosStim, 1 );
+      stimBuilder(Bstim, posstim[0].stimulus, keyBtoPosStim, 2 );
+      stimBuilder(Astim, negstim[0].stimulus, keyAtoNegStim, 3 );
+      stimBuilder(Bstim, negstim[0].stimulus, keyBtoNegStim, 4 );
 
       while(1) {
          shuffle(stimuli);
@@ -523,9 +523,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
 
 
 	//FUNCTION 6 - TAKES CONTENTS FROM A STIMULI POOL AND PLACES INTO STIMULI OBJECT
-	function stimBuilder(destination, array, category, correct, trialType){
+	function stimBuilder(array, category, correct, trialType){
       for(i=0;i<array.length;i++) {
-         destination.push({stimulus: array[i].stimulus, 
+         stimuli.push({stimulus: array[i].stimulus, 
                           index: array[i].index,
                           correct: correct, 
                           category: category,
