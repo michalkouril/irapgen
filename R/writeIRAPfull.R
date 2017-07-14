@@ -174,7 +174,7 @@ writeIRAPfull <- function(
   if(qsf==T){
     
     if (is.null(qsfTemplate)) {
-      qsfTemplate=system.file("codefiles", "IRAP_V9.qsf", package="irapgen")
+      qsfTemplate=system.file("codefiles", "IRAP_V9_norandom.qsf", package="irapgen")
     }
     
     #copy the template file to the wd
@@ -282,6 +282,8 @@ writeIRAPfull <- function(
         err <- 1
       }
     }
+    
+    
     if (err == 0) {
       fname <- filename()
       cat(paste("Generating JSON....",fname,"\n"),sep="")

@@ -9,8 +9,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
    var stimuliShowCount=0; // 0 -- show all combinations 2*(Astim + Bstim)
    var leftKeyChar="D";
    var rightKeyChar="K";
-   var tooSlowMessageMS=2000; // show "too slow" upperstim if tooSlowMessageMS response time exceeded
-   var tooSlowMessageShowTimeMS=600; // show "too slow" upperstim for this amount of time
+   var tooSlowMessageMS=2000; // show "too slow" message if tooSlowMessageMS response time exceeded
+   var tooSlowMessageShowTimeMS=600; // show "too slow" message for this amount of time
    var practiceMode=1; // evaluate responses to pass practice (append ,OK if success)
    var practiceSuccessThreasholdCorrect=0.80; // minimum % of correct answers to pass practice
    var practiceSuccessThreasholdMedianMS=2000; // minimum median time to pass practice
@@ -203,7 +203,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			images[images.length - 1].src = src;
 			
 			images[images.length - 1].onerror = function() {
-				alert("Your web browser encountered an issue running this portion of the study. You will be skipped ahead. You may have to click through this upperstim several times.");
+				alert("Your web browser encountered an issue running this portion of the study. You will be skipped ahead. You may have to click through this message several times.");
             if (document.getElementById('NextButton')) document.getElementById('NextButton').click();
 			};
 			
@@ -231,7 +231,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 
 	// FUNCTION 3 - START FUNCTION
 	/* Runs when the spacebar is pressed after the keypress listener has begun. Does initial houskeeping (grabs HTML content
-	such as upperstim, error, etc. and makes it so we can write to them). It sets as 'input' the contents of the question text box,
+	such as message, error, etc. and makes it so we can write to them). It sets as 'input' the contents of the question text box,
 	so we can write data to the question by editing that value. It also sets instructions to null. It then shuffles stimuli and
 	starts the first trial. */
 	 function start() {
@@ -261,10 +261,10 @@ Qualtrics.SurveyEngine.addOnload(function() {
          keyBtoNegStim=rightKey;
       }
 
-      stimBuilder(Astim, posstim[0].stimulus, keyAtoPosStim, 1 );
-      stimBuilder(Bstim, posstim[0].stimulus, keyBtoPosStim, 2 );
-      stimBuilder(Astim, negstim[0].stimulus, keyAtoNegStim, 3 );
-      stimBuilder(Bstim, negstim[0].stimulus, keyBtoNegStim, 4 );
+      stimBuilder(stimuli, Astim, posstim[0].stimulus, keyAtoPosStim, 1 );
+      stimBuilder(stimuli, Bstim, posstim[0].stimulus, keyBtoPosStim, 2 );
+      stimBuilder(stimuli, Astim, negstim[0].stimulus, keyAtoNegStim, 3 );
+      stimBuilder(stimuli, Bstim, negstim[0].stimulus, keyBtoNegStim, 4 );
 
       while(1) {
          shuffle(stimuli);
@@ -274,7 +274,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	      break;
       }
 
-      if (stimuliShowCount != 0 && stimuliShowCount < stimuliCount) {
+      if (stimuliShowCount != 0 && stimuliShowCount < stimuli.length) {
          stimuli.length = stimuliShowCount; // trim the length of the stimuli
       }
 
@@ -338,7 +338,10 @@ Qualtrics.SurveyEngine.addOnload(function() {
 
          upperstim.innerHTML = "";
          lowerstim.innerHTML = "";
-         responseList.sort();
+
+         function sortNumber(a,b) { return a - b; }
+
+         responseList.sort(sortNumber);
          medianResponse = responseList[responseList.length/2];
 			input.value += "END";
          if (practiceMode==1 && medianResponse <= practiceSuccessThreasholdMedianMS && countCorrect/countTotal >= practiceSuccessThreasholdCorrect) {
@@ -351,7 +354,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
             endMessage=1;
             setTimeout(function() {
                statusMessage.innerHTML = "Success rate: "+Math.round(100*countCorrect/countTotal)+"%<br>Median response: "+medianResponse+ "ms";
-               upperstim.innerHTML = "Press <b>space</b> to continue.";
+               lowerstim.innerHTML = "Press <b>space</b> to continue.";
                /*setTimeout(function() {
                   if (document.getElementById('NextButton')) document.getElementById('NextButton').click();
                }, practiceStatsTimeMS);
@@ -374,8 +377,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	
 	// FUNCTION 5 - KEYPRESS LISTENER FOR STANDARD ERROR MODE
 	/* This function grabs whatever key was pressed and saves it as keyCode. Depending on what was pressed, it will
-	start the IAT, write data, display next trials, etc. Note that errors are handled by swapping the upperstim out 
-	for a red X (the error upperstim below the stimulus is NOT used). Note also that an alternative version of this
+	start the IAT, write data, display next trials, etc. Note that errors are handled by swapping the message out 
+	for a red X (the error message below the stimulus is NOT used). Note also that an alternative version of this
 	function is defined below but only ONE will be called in a given IAT.*/
 	 function keyCheck(e) {
 		var keyCode;
@@ -432,7 +435,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	
 		} else {
 			input.value += currentStimulus.trialType + "T" + currentStimulus.index + "X" + currentStimulus.reactionTime + ",";
-			upperstim.innerHTML = "<b style='color:red;font-size:80px'><br><br>X</b>";
+			upperstim.innerHTML = "<br><br><br>+<b style='color:red;font-size:80px'><br><br>X</b>";
 			currentStimulus = null;
          countTotal++;
          if (currentStimulus.reactionTime>=tooSlowMessageMS) {
@@ -523,9 +526,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
 
 
 	//FUNCTION 6 - TAKES CONTENTS FROM A STIMULI POOL AND PLACES INTO STIMULI OBJECT
-	function stimBuilder(array, category, correct, trialType){
+	function stimBuilder(destination, array, category, correct, trialType){
       for(i=0;i<array.length;i++) {
-         stimuli.push({stimulus: array[i].stimulus, 
+         destination.push({stimulus: array[i].stimulus, 
                           index: array[i].index,
                           correct: correct, 
                           category: category,
