@@ -291,6 +291,27 @@ D1_even_df <-
          D1_even) %>%
   ungroup()
 
+penn_state_filtered_cleaned_df <-
+  filtered_cleaned_df %>%
+  filter(((trial_type==1 | trial_type==4) & !is.na(rt_a)) | 
+         ((trial_type==2 | trial_type==3) & !is.na(rt_b))
+  ) 
+
+penn_state_D1_df <-  
+  penn_state_filtered_cleaned_df %>%
+  group_by(unique_identifier,
+           test_block_pair) %>%
+  dplyr::summarize(rt_a_mean = mean(rt_a, na.rm = TRUE),
+                   rt_b_mean = mean(rt_b, na.rm = TRUE),
+                   rt_sd = sd(rt)) %>%
+  dplyr::mutate(diff = rt_b_mean - rt_a_mean, # this is effectively a rowwise() calculation as we have group_by() participant and then summarize()'d. rowwise() not included for brevity.
+                D1_ps = round(diff / rt_sd, 3)) %>% 
+  ungroup() %>%
+  group_by(unique_identifier) %>%
+  dplyr::summarize(D1_ps = round(mean(D1_ps), 3)) %>%
+  select(unique_identifier, 
+         D1_ps) %>%
+  ungroup()
 
 # percentage accuracy and percentage fast trials --------------------------
 
@@ -323,6 +344,7 @@ output_df <-
                 D1_by_tt_df,
                 D1_odd_df,
                 D1_even_df,
+                penn_state_D1_df,
                 mean_rt_df,
                 percentage_accuracy_and_fast_trials_df),
            by = "unique_identifier",
@@ -330,6 +352,18 @@ output_df <-
   rowwise() %>%
   mutate(passed_practice_blocks = ifelse(!is.na(D1), TRUE, FALSE))
  
+D_df <-
+  D1_df %>% 
+  dplyr::summarize(D = round(mean(D1, na.rm=TRUE),3))
+
+D_by_tt_df <-
+  D1_by_tt_df %>% 
+  ungroup() %>%
+  dplyr::summarize(D_trial_type_1 = round(mean(D1_trial_type_1, na.rm = TRUE),3), 
+                   D_trial_type_2 = round(mean(D1_trial_type_2, na.rm = TRUE),3),
+                   D_trial_type_3 = round(mean(D1_trial_type_3, na.rm = TRUE),3), 
+                   D_trial_type_4 = round(mean(D1_trial_type_4, na.rm = TRUE),3))
+
   # reliability
   # splithalfcorr <- cor(D1, D2, use="pairwise.complete.obs")
   # reliability <- (2*splithalfcorr) / (1 + splithalfcorr)
@@ -343,8 +377,8 @@ output_df <-
   fasttrial.rate <- num.fasttrial.removed / num.trials
   fastprt.count <- sum(output_df$exclude_based_on_fast_trials,na.rm=T)
   fastprt.rate <- sum(output_df$exclude_based_on_fast_trials,na.rm=T) / nrow(output_df)
-  error.num.prt = sum(cleaned_df$accuracy) 
-  error.rate.prt = sum(cleaned_df$accuracy) / nrow(cleaned_df)
+  error.num.prt = nrow(cleaned_df)-sum(cleaned_df$accuracy) 
+  error.rate.prt = 1-(sum(cleaned_df$accuracy) / nrow(cleaned_df))
 
   return(list(
     # skipped=skipped,
@@ -363,7 +397,10 @@ output_df <-
     fastprt.rate=fastprt.rate,
     error.num.prt=error.num.prt,
     error.rate.prt=error.rate.prt,
-    output_df=output_df
+    D=D_df$D,
+    D_by_tt_df=D_by_tt_df,
+    output_df=output_df,
+    cleaned_df=cleaned_df
   ))
 }
 
