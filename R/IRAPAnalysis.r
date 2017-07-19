@@ -227,6 +227,34 @@ D1_by_tt_df <-
                 D1_trial_type_2 = `2`,
                 D1_trial_type_3 = `3`,
                 D1_trial_type_4 = `4`)
+
+
+# D1 calculated for each stimuli from all test block rts
+D1_by_stim_df <-  
+  filtered_cleaned_df %>%
+  group_by(unique_identifier,
+           test_block_pair,
+           stimulus) %>%
+  dplyr::summarize(rt_a_mean = mean(rt_a, na.rm = TRUE),
+                   rt_b_mean = mean(rt_b, na.rm = TRUE),
+                   rt_sd = sd(rt)) %>%
+  dplyr::mutate(diff = rt_b_mean - rt_a_mean,
+                D1_by_stim = round(diff / rt_sd, 3)) %>%
+  ungroup() %>%
+  group_by(unique_identifier,
+           stimulus) %>%
+  select(unique_identifier, 
+         stimulus,
+         D1_by_stim) %>%
+  dplyr::summarize(D1_by_stim = round(mean(D1_by_stim), 3)) %>%
+  spread(stimulus, D1_by_stim) 
+
+# pos stim
+posstim <- sort(unlist(unique(cleaned_df[cleaned_df$trial_type %in% c(1,2),'stimulus'])))
+
+# neg stim
+negstim <- sort(unlist(unique(cleaned_df[cleaned_df$trial_type %in% c(3,4),'stimulus'])))
+
          
 # D1 for ODD trials by order of presentation (for split half reliability) calculated from all test block rts
 # NB internal consistency can be calculated by a spearman brown correlation or cronbach's alpha between odd and even D1 scores. Pearson's R is less appropriate.
@@ -320,7 +348,8 @@ output_df <-
                 D1_even_df,
                 penn_state_D1_df,
                 mean_rt_df,
-                percentage_accuracy_and_fast_trials_df),
+                percentage_accuracy_and_fast_trials_df,
+                D1_by_stim_df),
            by = "unique_identifier",
            type = "full") %>%
   rowwise() %>%
@@ -337,6 +366,11 @@ D_by_tt_df <-
                    D_trial_type_2 = round(mean(D1_trial_type_2, na.rm = TRUE),3),
                    D_trial_type_3 = round(mean(D1_trial_type_3, na.rm = TRUE),3), 
                    D_trial_type_4 = round(mean(D1_trial_type_4, na.rm = TRUE),3))
+
+D_by_stim_df <-
+  D1_by_stim_df[,-1] %>% 
+  ungroup() %>%
+  summarise_all(funs(mean))
 
   # reliability
   # splithalfcorr <- cor(D1, D2, use="pairwise.complete.obs")
@@ -373,6 +407,9 @@ D_by_tt_df <-
     error.rate.prt=error.rate.prt,
     D=D_df$D,
     D_by_tt_df=D_by_tt_df,
+    D_by_stim_df=D_by_stim_df,
+    posstim=posstim,
+    negstim=negstim,
     output_df=output_df,
     cleaned_df=cleaned_df
   ))
