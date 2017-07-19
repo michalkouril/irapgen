@@ -64,100 +64,67 @@ data_format <- "^([0-9])[T]([0-9]*)([CX])([0-9]*)$"
 # \\4 latency
 # 
 
-tp_tn_p<-tibble::rownames_to_column(
-  tibble::column_to_rownames(data,var=unique_identifier_column),
-  var="unique_identifier") %>% 
-  filter(unique_identifier!="ResponseID") %>%
+IRAPretrieve <- function(data, unique_identifier, block, block_pair, 
+                         trial_block_type, block_pair_num) {
+
+# Add condition if column V1 exists
+data<-data[data$V1!='ResponseID',]   
+data['unique_identifier']<-data[unique_identifier]
+data['block']<-data[block]
+id_string_arr <- 
+  data[,c('unique_identifier','block')] %>% 
   rowwise() %>%
-  dplyr::mutate(
-    TP1_COUNT=length(unlist(strsplit(gsub(",END","",as.character(TP1)),","))),
-    TP2_COUNT=length(unlist(strsplit(gsub(",END","",as.character(TP2)),","))),
-    TP3_COUNT=length(unlist(strsplit(gsub(",END","",as.character(TP3)),","))),
-    TN1_COUNT=length(unlist(strsplit(gsub(",END","",as.character(TN1)),","))),
-    TN2_COUNT=length(unlist(strsplit(gsub(",END","",as.character(TN2)),","))),
-    TN3_COUNT=length(unlist(strsplit(gsub(",END","",as.character(TN3)),","))),
-    PP1_COUNT=length(unlist(strsplit(gsub(",OK","",gsub(",END","",as.character(PP1))),","))),
-    PP2_COUNT=length(unlist(strsplit(gsub(",OK","",gsub(",END","",as.character(PP2))),","))),
-    PP3_COUNT=length(unlist(strsplit(gsub(",OK","",gsub(",END","",as.character(PP3))),","))),
-    PN1_COUNT=length(unlist(strsplit(gsub(",OK","",gsub(",END","",as.character(PN1))),","))),
-    PN2_COUNT=length(unlist(strsplit(gsub(",OK","",gsub(",END","",as.character(PN2))),","))),
-    PN3_COUNT=length(unlist(strsplit(gsub(",OK","",gsub(",END","",as.character(PN3))),","))),
-    TP=strsplit(gsub(",END","",as.character(paste(TP1,TP2,TP3,sep=","))),","),
-    TN=strsplit(gsub(",END","",as.character(paste(TN1,TN2,TN3,sep=","))),","),
-    PP=strsplit(gsub(",OK","",gsub(",END","",as.character(paste(PP1,PP2,PP3,sep=",")))),","),
-    PN=strsplit(gsub(",OK","",gsub(",END","",as.character(paste(PN1,PN2,PN3,sep=",")))),","),
-    TP_COUNT=length(TP),
-    TN_COUNT=length(TN),
-    PP_COUNT=length(PP),
-    PN_COUNT=length(PN)
-  ) %>% 
+  dplyr::mutate(block_arr=strsplit(gsub(",OK","",gsub(",END","",as.character(block))),",")) %>%
   ungroup() %>%
-  select(unique_identifier,TP,TN,PP,PN,
-         TP1_COUNT,TP2_COUNT,TP3_COUNT,TN1_COUNT,TN2_COUNT,TN3_COUNT,
-         PP1_COUNT,PP2_COUNT,PP3_COUNT,PN1_COUNT,PN2_COUNT,PN3_COUNT,
-         TP_COUNT,TN_COUNT,PP_COUNT,PN_COUNT)
+  select(unique_identifier,block_arr)
 
-# infer block count
-block_trial_count <- ifelse(median(tp_tn_p$PP1_COUNT)==0,max(tp_tn_p$PP1_COUNT),median(tp_tn_p$PP1_COUNT))
+id_string_df<-as.data.frame(id_string_arr)
+rownames(id_string_df) <- id_string_df$unique_identifier
+t_id_string_df<-t(as.data.frame(id_string_df$block_arr))  
+rownames(t_id_string_df)<- rownames(id_string_df)
+long_id_string_df<-melt(t_id_string_df)
+colnames(long_id_string_df) <- c("unique_identifier", "trial_order", "response")
+long_id_string_df$block <- rep(block,nrow(long_id_string_df)) 
+long_id_string_df$block_pair <- rep(block_pair,nrow(long_id_string_df)) 
+long_id_string_df$block_pair_num <- rep(block_pair_num,nrow(long_id_string_df)) 
+long_id_string_df$trial_block_type <- rep(trial_block_type,nrow(long_id_string_df)) 
+long_id_string_df$practice_block_pair <- rep(ifelse(block_pair=="P",block_pair_num,NA),nrow(long_id_string_df)) 
+long_id_string_df$test_block_pair <- rep(ifelse(block_pair=="T",block_pair_num,NA),nrow(long_id_string_df))
+long_id_string_df
+}
 
-# validate the counts -- exclude those with non-conformant block counts
+long_data_df<-
+rbind(IRAPretrieve(data, "V1", "PP1", "P", "A", 1),
+      IRAPretrieve(data, "V1", "PN1", "P", "B", 1),
+      IRAPretrieve(data, "V1", "PP2", "P", "A", 2),
+      IRAPretrieve(data, "V1", "PN2", "P", "B", 2),
+      IRAPretrieve(data, "V1", "PP3", "P", "A", 3),
+      IRAPretrieve(data, "V1", "PN3", "P", "B", 3),
+      IRAPretrieve(data, "V1", "TP1", "T", "A", 1),
+      IRAPretrieve(data, "V1", "TN1", "T", "B", 1),
+      IRAPretrieve(data, "V1", "TP2", "T", "A", 2),
+      IRAPretrieve(data, "V1", "TN2", "T", "B", 2),
+      IRAPretrieve(data, "V1", "TP3", "T", "A", 3),
+      IRAPretrieve(data, "V1", "TN3", "T", "B", 3)
+)
 
-
-
-
-tp_tn <- tibble::column_to_rownames(tp_tn_p,var="unique_identifier")
-rt_a_full<-t(as.data.frame(tp_tn$TP)) # one column per response
-rt_b_full<-t(as.data.frame(tp_tn$TN)) # one column per response
-rt_pp_full<-t(as.data.frame(tp_tn$PP)) # one column per response
-rt_pn_full<-t(as.data.frame(tp_tn$PN)) # one column per response
-rownames(rt_a_full) <- rownames(tp_tn) # name each row with participant id
-rownames(rt_b_full) <- rownames(tp_tn) # name each row with participant id
-rownames(rt_pp_full) <- rownames(tp_tn) # name each row with participant id
-rownames(rt_pn_full) <- rownames(tp_tn) # name each row with participant id
-
-responses_a<-melt(rt_a_full) # long format # 
-responses_b<-melt(rt_b_full) # long format # 
-responses_pp<-melt(rt_pp_full) # long format # 
-responses_pn<-melt(rt_pn_full) # long format # 
-
-colnames(responses_a) <- c("unique_identifier", "trial_order", "response_a")
-colnames(responses_b) <- c("unique_identifier", "trial_order", "response_b")
-colnames(responses_pp) <- c("unique_identifier", "trial_order", "response_a")
-colnames(responses_pn) <- c("unique_identifier", "trial_order", "response_b")
-
-responses_a$response_b<-rep(NA,nrow( responses_a))
-responses_pp$response_b<-rep(NA,nrow( responses_pp))
-
-responses_b$response_a<-rep(NA,nrow( responses_b))
-responses_pn$response_a<-rep(NA,nrow( responses_pn))
-
-responses_a$test_block_pair<-floor((responses_a$trial_order-1)/block_trial_count)+1
-responses_b$test_block_pair<-floor((responses_b$trial_order-1)/block_trial_count)+1
-responses_a$practice_block_pair<-rep(NA,nrow( responses_a))
-responses_b$practice_block_pair<-rep(NA,nrow( responses_b))
-
-responses_pp$test_block_pair<-rep(NA,nrow( responses_pp))
-responses_pn$test_block_pair<-rep(NA,nrow( responses_pn))
-responses_pp$practice_block_pair<-floor((responses_pp$trial_order-1)/block_trial_count)+1
-responses_pn$practice_block_pair<-floor((responses_pn$trial_order-1)/block_trial_count)+1
-
-input_df <- rbind(responses_a,responses_b,
-                  responses_pp,responses_pn) 
-
-cleaned_df <-input_df %>% 
+cleaned_df <-long_data_df %>% 
   dplyr::mutate(
-    rt_a=as.integer(gsub(data_format,"\\4", response_a)),
-    rt_b=as.integer(gsub(data_format,"\\4", response_b)),
-    trial_type_a=as.integer(gsub(data_format,"\\1", response_a)),
-    trial_type_b=as.integer(gsub(data_format,"\\1", response_b)),
-    accuracy_a=ifelse(gsub(data_format,"\\3", response_a)=="C",1,0),
-    accuracy_b=ifelse(gsub(data_format,"\\3", response_b)=="C",1,0)
+    rt_a=ifelse(trial_block_type=='A',as.integer(gsub(data_format,"\\4", response)),NA),
+    rt_b=ifelse(trial_block_type=='B',as.integer(gsub(data_format,"\\4", response)),NA),
+    trial_type_a=ifelse(trial_block_type=='A',as.integer(gsub(data_format,"\\1", response)),NA),
+    trial_type_b=ifelse(trial_block_type=='B',as.integer(gsub(data_format,"\\1", response)),NA),
+    accuracy_a=ifelse(trial_block_type=='A',ifelse(gsub(data_format,"\\3", response)=="C",1,0),NA),
+    accuracy_b=ifelse(trial_block_type=='B',ifelse(gsub(data_format,"\\3", response)=="C",1,0),NA),
+    stimulus_a=ifelse(trial_block_type=='A',as.integer(gsub(data_format,"\\2", response)),NA),
+    stimulus_b=ifelse(trial_block_type=='B',as.integer(gsub(data_format,"\\2", response)),NA)
   ) %>%
   rowwise() %>%
   dplyr::mutate(
     rt = sum(rt_a, rt_b, na.rm=TRUE),
     trial_type=sum(trial_type_a,trial_type_b,na.rm=TRUE),
-    accuracy = sum(accuracy_a, accuracy_b, na.rm=TRUE)
+    accuracy = sum(accuracy_a, accuracy_b, na.rm=TRUE),
+    stimulus = sum(stimulus_a, stimulus_b, na.rm=TRUE)
   ) %>%
   ungroup() %>%
   select(
@@ -171,7 +138,14 @@ cleaned_df <-input_df %>%
     trial_order,
     accuracy_a,
     accuracy_b,
-    accuracy
+    accuracy,
+    stimulus_a,
+    stimulus_b,
+    stimulus,
+    block_pair,
+    trial_block_type,
+    block_pair_num,
+    response
   )
 
 
