@@ -1,3 +1,8 @@
+#' 
+#' writeIRAPfull
+#' 
+#' writeIRAPfull(poswords=c("pos1"),negwords=c("neg1"),Awords=c("a1","a2","a3"),Bwords=c("b1","b2","b3"),qsf=TRUE)
+#' 
 writeIRAPfull <- function(
                          IRAPname="IRAP", 
                          catCol="green",
@@ -7,33 +12,46 @@ writeIRAPfull <- function(
                          Awords, 
                          Bwords, 
                          qsf=FALSE,
+                         qsfTemplate=NULL,
                          pause=250,
-                         stimuliShowCount=12,
-                         correct.error=T,
+                         stimuliShowCount=0,
+                         stimuliShowShortPracticeCount=4,
+                         correct.error=TRUE,
                          tooSlowMessageMS=2000,
-                         tooSlowMessageShowTimeMS=600
+                         tooSlowMessageShowTimeMS=600,
+                         practiceSuccessThreasholdCorrect=0.80,
+                         practiceSuccessThreasholdMedianMS=2000,
+                         showPracticeStats=1,
+                         qsfQSSP="Q60 SSP",    # short SAME practice
+                         qsfQSOP="Q57 SOP",    # short OPPOSITE practice
+                         qsfQSP="Q4 SP",     # SAME practice
+                         qsfQOP="Q6 OP",     # OPPOSITE practice
+                         qsfQST="Q8 ST",     # SAME test
+                         qsfQOT="Q10 OT"    # OPPOSITE test
+                         
 ) {
 
     library(jsonlite)
   
     cat("writeIRAPfull\n")
-  
+
+    # FIXME: add allowed characters checking
+
     irapname <- IRAPname
 
     cat("Create param files\n")
     
     params <- {}
-    if (correct.error) {
-      params$forceErrorCorrection <- 1
-    } else {
-      params$forceErrorCorrection <- 0
-    }
+    params$forceErrorCorrection <- as.integer(correct.error)
     params$interQuestionDelay <- pause
     params$stimuliShowCount <- stimuliShowCount
     params$leftKeyChar <- "D"
     params$rightKeyChar <- "K"
     params$tooSlowMessageMS <- tooSlowMessageMS
     params$tooSlowMessageShowTimeMS <- tooSlowMessageShowTimeMS
+    params$practiceSuccessThreasholdCorrect <- practiceSuccessThreasholdCorrect
+    params$practiceSuccessThreasholdMedianMS <- practiceSuccessThreasholdMedianMS
+    params$showPracticeStats <- showPracticeStats
 
     params$reverseAnswers <- 0
     params$practiceMode <- 0
@@ -43,13 +61,22 @@ writeIRAPfull <- function(
     params$reverseAnswers <- 1
     codePARAMS_test_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
-    params$reverseAnswers <- 0
     params$practiceMode <- 1
+    params$reverseAnswers <- 0
     codePARAMS_practice_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
     params$reverseAnswers <- 1
     codePARAMS_practice_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
+    params$stimuliShowCount <- stimuliShowShortPracticeCount
+    params$reverseAnswers <- 0
+    codePARAMS_short_practice_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
+    
+    params$reverseAnswers <- 1
+    codePARAMS_short_practice_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
+    
+    
+       
     cat("Create stimuli files\n")
     
     posstim <- data.frame(stimulus=paste("<b style='color:",catCol,"'>",poswords,"</b>",sep=""),
@@ -90,6 +117,12 @@ writeIRAPfull <- function(
     x <- system.file("codefiles", "codeC.txt", package="irapgen")
     codeC <- readChar(x,file.info(x)$size) 
     
+    # short practice positive
+    js_spp<-paste(codeA, codeIMG, codeB, codePARAMS_short_practice_pos, codeSTIM, codeC,sep="")
+    
+    # short practice negative
+    js_spn<-paste(codeA, codeIMG, codeB, codePARAMS_short_practice_neg, codeSTIM, codeC,sep="")
+    
     # practice positive
     js_pp<-paste(codeA, codeIMG, codeB, codePARAMS_practice_pos, codeSTIM, codeC,sep="")
     
@@ -102,50 +135,50 @@ writeIRAPfull <- function(
     # test negative
     js_tn<-paste(codeA, codeIMG, codeB, codePARAMS_test_neg, codeSTIM, codeC,sep="")
 
-    cat("Create directories\n")
-    
-    d1 <- paste("1 ",irapname,"_pp", sep='')
-    d2 <- paste("2 ",irapname,"_pn", sep='')
-    d3 <- paste("3 ",irapname,"_tp", sep='')
-    d4 <- paste("4 ",irapname,"_tn", sep='')
-    
-    dir.create(paste(getwd(),"/",d1,sep=""),showWarnings = FALSE)
-    dir.create(paste(getwd(),"/",d2,sep=""),showWarnings = FALSE)
-    dir.create(paste(getwd(),"/",d3,sep=""),showWarnings = FALSE)
-    dir.create(paste(getwd(),"/",d4,sep=""),showWarnings = FALSE)
+    cat("Create directory\n")
+  
+    prjDir <- irapname;
+    dir.create(paste(getwd(),"/",prjDir,sep=""),showWarnings = FALSE)
 
     cat("Copy html files\n")
+ 
+    file.copy(system.file("codefiles", "html_template_practice.html", package="irapgen"), 
+              paste(getwd(),"/",prjDir,"/",qsfQSSP,"_h.txt",sep="") )
     
     file.copy(system.file("codefiles", "html_template_practice.html", package="irapgen"), 
-              paste(getwd(),"/",d1,"/Q1 h.txt",sep="") )
+              paste(getwd(),"/",prjDir,"/",qsfQSOP,"_h.txt",sep="") )
     
     file.copy(system.file("codefiles", "html_template_practice.html", package="irapgen"), 
-              paste(getwd(),"/",d2,"/Q2 h.txt",sep="") )
+              paste(getwd(),"/",prjDir,"/",qsfQSP,"_h.txt",sep="") )
+    
+    file.copy(system.file("codefiles", "html_template_practice.html", package="irapgen"), 
+              paste(getwd(),"/",prjDir,"/",qsfQOP,"_h.txt",sep="") )
     
     file.copy(system.file("codefiles", "html_template_test.html", package="irapgen"), 
-              paste(getwd(),"/",d3,"/Q3 h.txt",sep="") )
+              paste(getwd(),"/",prjDir,"/",qsfQST,"_h.txt",sep="") )
     
     file.copy(system.file("codefiles", "html_template_test.html", package="irapgen"), 
-              paste(getwd(),"/",d4,"/Q4 h.txt",sep="") )    
+              paste(getwd(),"/",prjDir,"/",qsfQOT,"_h.txt",sep="") )    
  
     cat("Create js files\n")
     
-    writeChar(js_pp, paste(getwd(),"/",d1,"/Q1 J.txt",sep="") )
-    writeChar(js_pn, paste(getwd(),"/",d2,"/Q2 J.txt",sep="") )
-    writeChar(js_tp, paste(getwd(),"/",d3,"/Q3 J.txt",sep="") )
-    writeChar(js_tn, paste(getwd(),"/",d4,"/Q4 J.txt",sep="") )
+    writeChar(js_spp, paste(getwd(),"/",prjDir,"/",qsfQSSP,"_J.txt",sep="") )
+    writeChar(js_spn, paste(getwd(),"/",prjDir,"/",qsfQSOP,"_J.txt",sep="") )
+    writeChar(js_pp, paste(getwd(),"/",prjDir,"/",qsfQSP,"_J.txt",sep="") )
+    writeChar(js_pn, paste(getwd(),"/",prjDir,"/",qsfQOP,"_J.txt",sep="") )
+    writeChar(js_tp, paste(getwd(),"/",prjDir,"/",qsfQST,"_J.txt",sep="") )
+    writeChar(js_tn, paste(getwd(),"/",prjDir,"/",qsfQOT,"_J.txt",sep="") )
 
 
   ## if qsf argument is true, make a qsf file
   if(qsf==T){
     
-    qsfTemplate="IRAP_V3.qsf"
-    
-    #code below uses lowercase
-    irapname <- IRAPname
+    if (is.null(qsfTemplate)) {
+      qsfTemplate=system.file("codefiles", "IRAP_V9_norandom.qsf", package="irapgen")
+    }
     
     #copy the template file to the wd
-    file.copy(system.file("codefiles", qsfTemplate, package="irapgen"), file.path(getwd()))
+    file.copy(qsfTemplate, file.path(getwd()))
     
     filename = function() {
       paste('IRAP-', irapname, '.qsf', sep='')
@@ -158,99 +191,115 @@ writeIRAPfull <- function(
     q$SurveyName <- irapname
     q$SurveyEntry$SurveyName <- irapname
     
-    files=c(paste("1 ",irapname,"_pp", sep=''),
-            paste("2 ",irapname,"_pn", sep=''),
-            paste("3 ",irapname,"_tp", sep=''),
-            paste("4 ",irapname,"_tn", sep=''))
-    
-    
     filecontent <- c()
-    txtfiles <- list.files(path=files, pattern="*.txt", full.names=T, recursive=T)
-    cat(toJSON(txtfiles))
-    lapply(txtfiles, function(x) {
-      cat(paste("reading file:",x,"\n"))
-      t <- readChar(x,file.info(x)$size) # load file
-      k <- gsub("^.*/(Q[0-4]) ([hJ]).*$", "\\1\\2", x)
-      filecontent[[k]] <<- t
-    })
+    qsfPageReplaced <- c()
+
+    for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
+       qsfFile<-paste(qsfBlock,"_h.txt",sep="")
+       qsfFileFullPath<-paste(getwd(),"/",prjDir,"/",qsfFile,sep="")
+       filecontent[[qsfFile]]<-readChar(qsfFileFullPath, file.info(qsfFileFullPath)$size)
+
+       qsfFile<-paste(qsfBlock,"_J.txt",sep="")
+       qsfFileFullPath<-paste(getwd(),"/",prjDir,"/",qsfFile,sep="")
+       filecontent[[qsfFile]]<-readChar(qsfFileFullPath, file.info(qsfFileFullPath)$size)
+       
+       qsfPageReplaced[[qsfBlock]] <- 0
+    }
     
     
-    cat("Replacing html and Javascript content....\n")
-    for (i in 1:length(q$SurveyElements$Payload)) {
-      m <- 0
-      if (is.list(q$SurveyElements$Payload[i][[1]])) {
-        m <- length(grep("Q[0-4] [PT][PN]", q$SurveyElements$Payload[i][[1]]$DataExportTag))
-      }
-      if (!(m == 0)) {
-        # q$SurveyElements$Payload[i][[1]]$DataExportTag
-        qnumber <- gsub("^(Q[0-4]) [PT][PN]$", "\\1", q$SurveyElements$Payload[i][[1]]$DataExportTag)
-        qnumberhtml <- paste(qnumber,'h',sep="")
-        qnumberjs <- paste(qnumber,'J',sep="")
-        paste(qnumberhtml,qnumberjs)
-        q$SurveyElements$Payload[i][[1]]$QuestionText <- filecontent[[qnumberhtml]]
-        q$SurveyElements$Payload[i][[1]]$QuestionJS <- filecontent[[qnumberjs]]
-      } else {
-        # if (exists("q$SurveyElements$Payload[i][[1]]$QuestionText") &&
-        #     length(q$SurveyElements$Payload[i][[1]]$QuestionText)>0) {
-        #   qtext <- q$SurveyElements$Payload[i][[1]]$QuestionText
-        #   qtext <- qsf_iat_rename("Insects", input$aName, "flowers", input$bName, qtext)
-        #   q$SurveyElements$Payload[i][[1]]$QuestionText <- qtext
-        # }
-        # if (exists("q$SurveyElements$Payload[i][[1]]$QuestionJS") &&
-        #     length(q$SurveyElements$Payload[i][[1]]$QuestionJS)>0) {
-        #   qtext <- q$SurveyElements$Payload[i][[1]]$QuestionJS
-        #   qtext <- qsf_iat_rename("Insects", input$aName, "flowers", input$bName, qtext)
-        #   q$SurveyElements$Payload[i][[1]]$QuestionJS <- qtext
-        # }
-        # if (exists("q$SurveyElements$Payload[i][[1]]$QuestionDescription") &&
-        #     length(q$SurveyElements$Payload[i][[1]]$QuestionDescription)>0) {
-        #   qtext <- q$SurveyElements$Payload[i][[1]]$QuestionDescription
-        #   qtext <- qsf_iat_rename("Insects", input$aName, "flowers", input$bName, qtext)
-        #   q$SurveyElements$Payload[i][[1]]$QuestionDescription <- qtext
-        # }
-        # if (exists("q$SurveyElements$Payload[i][[1]]$Choices[1][[1]]$Display") &&
-        #     length(q$SurveyElements$Payload[i][[1]]$Choices[1][[1]]$Display)>0) {
-        #   qtext <- q$SurveyElements$Payload[i][[1]]$Choices[1][[1]]$Display
-        #   qtext <- qsf_iat_rename("Insects", input$aName, "flowers", input$bName, qtext)
-        #   q$SurveyElements$Payload[i][[1]]$Choices[1][[1]]$Display <- qtext
-        # }
-        # if (exists("q$SurveyElements$Payload[i][[1]]$Choices[7][[1]]$Display") &&
-        #     length(q$SurveyElements$Payload[i][[1]]$Choices[7][[1]]$Display)>0) {
-        #   qtext <- q$SurveyElements$Payload[i][[1]]$Choices[7][[1]]$Display
-        #   qtext <- qsf_iat_rename("Insects", input$aName, "flowers", input$bName, qtext)
-        #   q$SurveyElements$Payload[i][[1]]$Choices[7][[1]]$Display <- qtext
-        # }
+    cat("Replacing html and Javascript content....",qsfTemplate,"\n")
+    for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
+       for (i in 1:length(q$SurveyElements$Payload)) {
+          m <- 0
+          if (is.list(q$SurveyElements$Payload[i][[1]])) {
+             # cat(paste("Compare ",qsfBlock," and ",q$SurveyElements$Payload[i][[1]]$DataExportTag,sep=""))
+             m <- length(grep(qsfBlock, q$SurveyElements$Payload[i][[1]]$DataExportTag))
+          }
+          if (!(m == 0)) {
+             # q$SurveyElements$Payload[i][[1]]$DataExportTag
+             # qnumber <- gsub("^(Q[0-4]) [PT][PN]$", "\\1", q$SurveyElements$Payload[i][[1]]$DataExportTag)
+             cat(paste("Replacing ",qsfBlock,"\n",sep=""))
+             qHTML <- paste(qsfBlock,'_h.txt',sep="")
+             qJS <- paste(qsfBlock,'_J.txt',sep="")
+             q$SurveyElements$Payload[i][[1]]$QuestionText <- filecontent[[qHTML]]
+             q$SurveyElements$Payload[i][[1]]$QuestionJS <- filecontent[[qJS]]
+             qsfPageReplaced[[qsfBlock]] <- 1
+          } else {
+             # if (exists("q$SurveyElements$Payload[i][[1]]$QuestionText") &&
+             #     length(q$SurveyElements$Payload[i][[1]]$QuestionText)>0) {
+             #   qtext <- q$SurveyElements$Payload[i][[1]]$QuestionText
+             #   qtext <- qsf_iat_rename("Insects", input$aName, "flowers", input$bName, qtext)
+             #   q$SurveyElements$Payload[i][[1]]$QuestionText <- qtext
+             # }
+             # if (exists("q$SurveyElements$Payload[i][[1]]$QuestionJS") &&
+             #     length(q$SurveyElements$Payload[i][[1]]$QuestionJS)>0) {
+             #   qtext <- q$SurveyElements$Payload[i][[1]]$QuestionJS
+             #   qtext <- qsf_iat_rename("Insects", input$aName, "flowers", input$bName, qtext)
+             #   q$SurveyElements$Payload[i][[1]]$QuestionJS <- qtext
+             # }
+             # if (exists("q$SurveyElements$Payload[i][[1]]$QuestionDescription") &&
+             #     length(q$SurveyElements$Payload[i][[1]]$QuestionDescription)>0) {
+             #   qtext <- q$SurveyElements$Payload[i][[1]]$QuestionDescription
+             #   qtext <- qsf_iat_rename("Insects", input$aName, "flowers", input$bName, qtext)
+             #   q$SurveyElements$Payload[i][[1]]$QuestionDescription <- qtext
+             # }
+             # if (exists("q$SurveyElements$Payload[i][[1]]$Choices[1][[1]]$Display") &&
+             #     length(q$SurveyElements$Payload[i][[1]]$Choices[1][[1]]$Display)>0) {
+             #   qtext <- q$SurveyElements$Payload[i][[1]]$Choices[1][[1]]$Display
+             #   qtext <- qsf_iat_rename("Insects", input$aName, "flowers", input$bName, qtext)
+             #   q$SurveyElements$Payload[i][[1]]$Choices[1][[1]]$Display <- qtext
+             # }
+             # if (exists("q$SurveyElements$Payload[i][[1]]$Choices[7][[1]]$Display") &&
+             #     length(q$SurveyElements$Payload[i][[1]]$Choices[7][[1]]$Display)>0) {
+             #   qtext <- q$SurveyElements$Payload[i][[1]]$Choices[7][[1]]$Display
+             #   qtext <- qsf_iat_rename("Insects", input$aName, "flowers", input$bName, qtext)
+             #   q$SurveyElements$Payload[i][[1]]$Choices[7][[1]]$Display <- qtext
+             # }
+          }
+       }
+    }
+    
+    for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
+       if (is.character(q$SurveyElements$Payload$DataExportTag)) {
+          for (i in 1:length(q$SurveyElements$Payload$DataExportTag)) {
+             m <- length(grep(qsfBlock, q$SurveyElements$Payload$DataExportTag[i]))
+             if (!(m == 0)) {
+                cat(paste("Replacing ",qsfBlock,"\n",sep=""))
+                qHTML <- paste(qsfBlock,'_h.txt',sep="")
+                qJS <- paste(qsfBlock,'_J.txt',sep="")
+                q$SurveyElements$Payload$QuestionText[i] <- filecontent[[qHTML]]
+                q$SurveyElements$Payload$QuestionJS[i] <- filecontent[[qJS]]
+                qsfPageReplaced[[qsfBlock]] <- 1
+             }
+          }
+       }
+    }
+    
+    err <- 0
+    for (i in names(qsfPageReplaced)) { 
+      if (qsfPageReplaced[[i]] == 0) {
+        cat(paste(i, " not found in qsf file\n"))
+        err <- 1
       }
     }
     
-    if (is.character(q$SurveyElements$Payload$DataExportTag)) {
-      for (i in 1:length(q$SurveyElements$Payload$DataExportTag)) {
-        m <- length(grep("Q[0-4] [PT][PN]", q$SurveyElements$Payload$DataExportTag[i]))
-        if (!(m == 0)) {
-          qnumber <- gsub("^(Q[0-4]) [PT][PN]$", "\\1", q$SurveyElements$Payload$DataExportTag[i])
-          qnumberhtml <- paste(qnumber,'h',sep="")
-          qnumberjs <- paste(qnumber,'J',sep="")
-          paste(qnumberhtml,qnumberjs)
-          q$SurveyElements$Payload$QuestionText[i] <- filecontent[[qnumberhtml]]
-          q$SurveyElements$Payload$QuestionJS[i] <- filecontent[[qnumberjs]]
-        }
-      }
+    
+    if (err == 0) {
+      fname <- filename()
+      cat(paste("Generating JSON....",fname,"\n"),sep="")
+      qjson <- toJSON(q,null="null",auto_unbox=T)
+      minify(qjson)
+      write(qjson, filename())
+    } else {
+      cat("Error -- not all blocks have been replaced. Not generating JSON..")
+      unlink(filename(), recursive = F)
     }
     
-    fname <- filename()
-    cat(paste("Generating JSON....",fname,"\n"),sep="")
-    qjson <- toJSON(q,null="null",auto_unbox=T)
-    minify(qjson)
-    write(qjson, filename())
-  
     #remove template
     # file.remove("FullTemplate_-_For_Shiny_V9.qsf")
     
     #remove HTML and JavaScript folders if QSF
-    unlink(files[1], recursive = T)
-    unlink(files[2], recursive = T)
-    unlink(files[3], recursive = T)
-    unlink(files[4], recursive = T)
+    unlink(paste(getwd(),"/",prjDir, recursive = T))
   }
 
 }
