@@ -186,7 +186,7 @@ writeIRAPfull <- function(
     
     library(jsonlite)
     
-    q <- fromJSON(qsfTemplate)
+    q <- fromJSON(qsfTemplate, simplifyVector = FALSE)
     
     q$SurveyName <- irapname
     q$SurveyEntry$SurveyName <- irapname
@@ -209,11 +209,11 @@ writeIRAPfull <- function(
     
     cat("Replacing html and Javascript content....",qsfTemplate,"\n")
     for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
-       for (i in 1:length(q$SurveyElements$Payload)) {
+       for (i in 1:length(q$SurveyElements)) {
           m <- 0
-          if (is.list(q$SurveyElements$Payload[i][[1]])) {
+          if (is.list(q$SurveyElements[[i]]$Payload)) {
              # cat(paste("Compare ",qsfBlock," and ",q$SurveyElements$Payload[i][[1]]$DataExportTag,sep=""))
-             m <- length(grep(qsfBlock, q$SurveyElements$Payload[i][[1]]$DataExportTag))
+             m <- length(grep(qsfBlock, q$SurveyElements[[i]]$Payload$DataExportTag))
           }
           if (!(m == 0)) {
              # q$SurveyElements$Payload[i][[1]]$DataExportTag
@@ -221,8 +221,8 @@ writeIRAPfull <- function(
              cat(paste("Replacing ",qsfBlock,"\n",sep=""))
              qHTML <- paste(qsfBlock,'_h.txt',sep="")
              qJS <- paste(qsfBlock,'_J.txt',sep="")
-             q$SurveyElements$Payload[i][[1]]$QuestionText <- filecontent[[qHTML]]
-             q$SurveyElements$Payload[i][[1]]$QuestionJS <- filecontent[[qJS]]
+             q$SurveyElements[[i]]$Payload$QuestionText <- filecontent[[qHTML]]
+             q$SurveyElements[[i]]$Payload$QuestionJS <- filecontent[[qJS]]
              qsfPageReplaced[[qsfBlock]] <- 1
           } else {
              # if (exists("q$SurveyElements$Payload[i][[1]]$QuestionText") &&
@@ -259,21 +259,21 @@ writeIRAPfull <- function(
        }
     }
     
-    for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
-       if (is.character(q$SurveyElements$Payload$DataExportTag)) {
-          for (i in 1:length(q$SurveyElements$Payload$DataExportTag)) {
-             m <- length(grep(qsfBlock, q$SurveyElements$Payload$DataExportTag[i]))
-             if (!(m == 0)) {
-                cat(paste("Replacing ",qsfBlock,"\n",sep=""))
-                qHTML <- paste(qsfBlock,'_h.txt',sep="")
-                qJS <- paste(qsfBlock,'_J.txt',sep="")
-                q$SurveyElements$Payload$QuestionText[i] <- filecontent[[qHTML]]
-                q$SurveyElements$Payload$QuestionJS[i] <- filecontent[[qJS]]
-                qsfPageReplaced[[qsfBlock]] <- 1
-             }
-          }
-       }
-    }
+    # for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
+    #    if (is.character(q$SurveyElements$Payload$DataExportTag)) {
+    #       for (i in 1:length(q$SurveyElements$Payload$DataExportTag)) {
+    #          m <- length(grep(qsfBlock, q$SurveyElements$Payload$DataExportTag[i]))
+    #          if (!(m == 0)) {
+    #             cat(paste("Replacing ",qsfBlock,"\n",sep=""))
+    #             qHTML <- paste(qsfBlock,'_h.txt',sep="")
+    #             qJS <- paste(qsfBlock,'_J.txt',sep="")
+    #             q$SurveyElements$Payload$QuestionText[i] <- filecontent[[qHTML]]
+    #             q$SurveyElements$Payload$QuestionJS[i] <- filecontent[[qJS]]
+    #             qsfPageReplaced[[qsfBlock]] <- 1
+    #          }
+    #       }
+    #    }
+    # }
     
     err <- 0
     for (i in names(qsfPageReplaced)) { 
