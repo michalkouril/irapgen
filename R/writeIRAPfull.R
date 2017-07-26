@@ -174,8 +174,10 @@ writeIRAPfull <- function(
   if(qsf==T){
     
     if (is.null(qsfTemplate)) {
-      qsfTemplate=system.file("codefiles", "IRAP_V11.qsf", package="irapgen")
+      qsfTemplate=system.file("codefiles", "IRAP_V12.qsf", package="irapgen")
     }
+
+    cat(paste("Parse QSF template ", qsfTemplate, "\n"))
     
     #copy the template file to the wd
     file.copy(qsfTemplate, file.path(getwd()))
