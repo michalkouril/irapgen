@@ -424,7 +424,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			currentStimulus = null;
          countCorrect++;
          countTotal++;
-         if (currentStimulus.reactionTime>=tooSlowMessageMS) {
+         if (tooSlowMessageMS > 0 && currentStimulus.reactionTime>=tooSlowMessageMS) {
             statusMessage.innerHTML = "too slow";
 			   // error.innerHTML = "too slow";
             setTimeout(function() {statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
@@ -438,7 +438,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			upperstim.innerHTML = "<br><br><br>+<b style='color:red;font-size:80px'><br><br>X</b>";
 			currentStimulus = null;
          countTotal++;
-         if (currentStimulus.reactionTime>=tooSlowMessageMS) {
+         if (tooSlowMessageMS > 0 && currentStimulus.reactionTime>=tooSlowMessageMS) {
             statusMessage.innerHTML = "too slow";
 			   // error.innerHTML = "too slow";
             setTimeout(function() {statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
@@ -506,7 +506,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
             countTotal++;
 			}
 
-         if (currentStimulus.reactionTime>=tooSlowMessageMS) {
+         if (tooSlowMessageMS > 0 && currentStimulus.reactionTime>=tooSlowMessageMS) {
             statusMessage.innerHTML = "too slow";
 			   // error.innerHTML = "too slow";
             setTimeout(function() {statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);

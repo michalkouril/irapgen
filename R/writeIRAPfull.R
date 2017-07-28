@@ -17,6 +17,8 @@ writeIRAPfull <- function(
                          stimuliShowCount=0,
                          stimuliShowShortPracticeCount=4,
                          correct.error=TRUE,
+                         tooSlowMessagePractice=TRUE,
+                         tooSlowMessageTest=FALSE,
                          tooSlowMessageMS=2000,
                          tooSlowMessageShowTimeMS=600,
                          practiceSuccessThreasholdCorrect=0.80,
@@ -44,7 +46,6 @@ writeIRAPfull <- function(
     params <- {}
     params$forceErrorCorrection <- as.integer(correct.error)
     params$interQuestionDelay <- pause
-    params$stimuliShowCount <- stimuliShowCount
     params$leftKeyChar <- "D"
     params$rightKeyChar <- "K"
     params$tooSlowMessageMS <- tooSlowMessageMS
@@ -53,22 +54,33 @@ writeIRAPfull <- function(
     params$practiceSuccessThreasholdMedianMS <- practiceSuccessThreasholdMedianMS
     params$showPracticeStats <- showPracticeStats
 
-    params$reverseAnswers <- 0
+    # Test blocks (not practice)
+    params$stimuliShowCount <- stimuliShowCount
     params$practiceMode <- 0
-
+    if (tooSlowMessageTest==FALSE) params$tooSlowMessageMS <- 0
+    else params$tooSlowMessageMS <- tooSlowMessageMS
+      
+    params$reverseAnswers <- 0
     codePARAMS_test_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
     
     params$reverseAnswers <- 1
     codePARAMS_test_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
+    # Practice blocks (not actual test)
+    params$stimuliShowCount <- stimuliShowCount
     params$practiceMode <- 1
+    if (tooSlowMessagePractice==FALSE) params$tooSlowMessageMS <- 0
+    else params$tooSlowMessageMS <- tooSlowMessageMS
+    
     params$reverseAnswers <- 0
     codePARAMS_practice_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
     params$reverseAnswers <- 1
     codePARAMS_practice_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
+    # Short Practice Blocks
     params$stimuliShowCount <- stimuliShowShortPracticeCount
+    
     params$reverseAnswers <- 0
     codePARAMS_short_practice_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
     
