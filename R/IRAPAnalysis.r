@@ -76,7 +76,8 @@ id_string_arr <-
   rowwise() %>%
   dplyr::mutate(block_arr=strsplit(gsub(",OK","",gsub(",END","",as.character(block))),",")) %>%
   ungroup() %>%
-  select(unique_identifier,block_arr)
+  select(unique_identifier,block_arr) %>%
+  filter(block_arr!="character(0)")
 
 id_string_df<-as.data.frame(id_string_arr)
 rownames(id_string_df) <- id_string_df$unique_identifier
@@ -168,6 +169,20 @@ n_pairs_practice_blocks_df <-
   group_by(unique_identifier) %>%
   dplyr::summarize(n_pairs_practice_blocks = max(practice_block_pair, na.rm = TRUE))
 
+block_accuracy_df <-
+  cleaned_df[,c('unique_identifier','block_pair','block_pair_num','trial_block_type','rt', 'accuracy')] %>% 
+  dplyr::mutate(block=paste0(block_pair,block_pair_num,trial_block_type,"_accuracy")) %>%
+  group_by(unique_identifier,block) %>% 
+  dplyr::summarise(accuracy_mean=mean(accuracy)) %>% 
+  spread(block,accuracy_mean)
+
+block_rtmed_df <-
+  cleaned_df[,c('unique_identifier','block_pair','block_pair_num','trial_block_type','rt', 'accuracy')] %>% 
+  dplyr::mutate(block=paste0(block_pair,block_pair_num,trial_block_type,"_rtmed")) %>%
+  group_by(unique_identifier,block) %>% 
+  dplyr::summarise(rt_median=mean(rt)) %>% 
+  spread(block,rt_median)
+
 
  # D1 scores and mean latency ----------------------------------------------
 
@@ -250,10 +265,10 @@ D1_by_stim_df <-
   spread(stimulus, D1_by_stim) 
 
 # pos stim
-posstim <- sort(unlist(unique(cleaned_df[cleaned_df$trial_type %in% c(1,2),'stimulus'])))
+posstim <- sort(unlist(unique(cleaned_df[cleaned_df$trial_type %in% c(1,3),'stimulus'])))
 
 # neg stim
-negstim <- sort(unlist(unique(cleaned_df[cleaned_df$trial_type %in% c(3,4),'stimulus'])))
+negstim <- sort(unlist(unique(cleaned_df[cleaned_df$trial_type %in% c(2,4),'stimulus'])))
 
          
 # D1 for ODD trials by order of presentation (for split half reliability) calculated from all test block rts
@@ -349,7 +364,9 @@ output_df <-
                 penn_state_D1_df,
                 mean_rt_df,
                 percentage_accuracy_and_fast_trials_df,
-                D1_by_stim_df),
+                D1_by_stim_df,
+                block_accuracy_df,
+                block_rtmed_df),
            by = "unique_identifier",
            type = "full") %>%
   rowwise() %>%
