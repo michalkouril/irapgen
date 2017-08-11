@@ -44,7 +44,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	var catnum = [];
 	
 	//DEFINE addlines. THIS WILL BE PUT IN FRONT OF WORD STIMULI TO DROP THEM DOWN TO BETTER ALIGN WITH IMAGE CENTERS.
- 	var addlines="<br><br><br>";	
+ 	var addlines="<br>"; // add more if font smaller (30px + "<br>";)	
 	
 	// THE FOLLOWING ARE ONLY USED IF FORCED ERROR CORRECTION IS ENABLED
 	var fix = 0;
@@ -353,8 +353,23 @@ Qualtrics.SurveyEngine.addOnload(function() {
             currentStimulus=0;
             endMessage=1;
             setTimeout(function() {
-               statusMessage.innerHTML = "Success rate: "+Math.round(100*countCorrect/countTotal)+"%<br>Median response: "+medianResponse+ "ms";
-               lowerstim.innerHTML = "Press <b>space</b> to continue.";
+               if (medianResponse <= practiceSuccessThreasholdMedianMS && countCorrect/countTotal >= practiceSuccessThreasholdCorrect) {
+                   statusMessage.innerHTML="You’re doing great!";
+               } else {
+                 if (countCorrect/countTotal >= practiceSuccessThreasholdCorrect) {
+                   statusMessage.innerHTML="<br>";
+                 } else {
+                   statusMessage.innerHTML="Be a little more accurate.<br>";
+                 }
+                 if (medianResponse <= practiceSuccessThreasholdMedianMS) {
+                   statusMessage.innerHTML+="Your speed is great!";
+                 } else {
+                   statusMessage.innerHTML+="Try to be a little bit faster.";
+                 }
+               }
+               // statusMessage.innerHTML = "Success rate: "+Math.round(100*countCorrect/countTotal)+"%<br>Median response: "+medianResponse+ "ms";
+               
+               lowerstim.innerHTML = "<p style='font-size:30px'>Press <b>space</b> to continue.</p>";
                /*setTimeout(function() {
                   if (document.getElementById('NextButton')) document.getElementById('NextButton').click();
                }, practiceStatsTimeMS);
