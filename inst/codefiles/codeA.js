@@ -435,7 +435,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 		//TRADITIONAL ERROR MODE
 		if (keyCode === currentStimulus.correct) {				
 			input.value += currentStimulus.trialType + "T" + currentStimulus.index + "C" + currentStimulus.reactionTime + ",";	
-			upperstim.innerHTML = "<br><br><br>+";
+			upperstim.innerHTML = "<br><br><br>";
 			currentStimulus = null;
          countCorrect++;
          countTotal++;
