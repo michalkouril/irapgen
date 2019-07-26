@@ -17,6 +17,8 @@ writeIRAPfull <- function(
                          stimuliShowCount=0,
                          stimuliShowShortPracticeCount=4,
                          correct.error=TRUE,
+                         tooSlowMessagePractice=TRUE,
+                         tooSlowMessageTest=FALSE,
                          tooSlowMessageMS=2000,
                          tooSlowMessageShowTimeMS=600,
                          practiceSuccessThreasholdCorrect=0.80,
@@ -44,7 +46,6 @@ writeIRAPfull <- function(
     params <- {}
     params$forceErrorCorrection <- as.integer(correct.error)
     params$interQuestionDelay <- pause
-    params$stimuliShowCount <- stimuliShowCount
     params$leftKeyChar <- "D"
     params$rightKeyChar <- "K"
     params$tooSlowMessageMS <- tooSlowMessageMS
@@ -53,22 +54,33 @@ writeIRAPfull <- function(
     params$practiceSuccessThreasholdMedianMS <- practiceSuccessThreasholdMedianMS
     params$showPracticeStats <- showPracticeStats
 
-    params$reverseAnswers <- 0
+    # Test blocks (not practice)
+    params$stimuliShowCount <- stimuliShowCount
     params$practiceMode <- 0
-
+    if (tooSlowMessageTest==FALSE) params$tooSlowMessageMS <- 0
+    else params$tooSlowMessageMS <- tooSlowMessageMS
+      
+    params$reverseAnswers <- 0
     codePARAMS_test_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
     
     params$reverseAnswers <- 1
     codePARAMS_test_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
+    # Practice blocks (not actual test)
+    params$stimuliShowCount <- stimuliShowCount
     params$practiceMode <- 1
+    if (tooSlowMessagePractice==FALSE) params$tooSlowMessageMS <- 0
+    else params$tooSlowMessageMS <- tooSlowMessageMS
+    
     params$reverseAnswers <- 0
     codePARAMS_practice_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
     params$reverseAnswers <- 1
     codePARAMS_practice_neg <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
 
+    # Short Practice Blocks
     params$stimuliShowCount <- stimuliShowShortPracticeCount
+    
     params$reverseAnswers <- 0
     codePARAMS_short_practice_pos <- paste("initParams =",toJSON(params,auto_unbox = TRUE),";\n",sep="")
     
@@ -174,8 +186,10 @@ writeIRAPfull <- function(
   if(qsf==T){
     
     if (is.null(qsfTemplate)) {
-      qsfTemplate=system.file("codefiles", "IRAP_V9_norandom.qsf", package="irapgen")
+      qsfTemplate=system.file("codefiles", "IRAP_V12.qsf", package="irapgen")
     }
+
+    cat(paste("Parse QSF template ", qsfTemplate, "\n"))
     
     #copy the template file to the wd
     file.copy(qsfTemplate, file.path(getwd()))
@@ -186,7 +200,7 @@ writeIRAPfull <- function(
     
     library(jsonlite)
     
-    q <- fromJSON(qsfTemplate)
+    q <- fromJSON(qsfTemplate, simplifyVector = FALSE)
     
     q$SurveyName <- irapname
     q$SurveyEntry$SurveyName <- irapname
@@ -209,11 +223,11 @@ writeIRAPfull <- function(
     
     cat("Replacing html and Javascript content....",qsfTemplate,"\n")
     for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
-       for (i in 1:length(q$SurveyElements$Payload)) {
+       for (i in 1:length(q$SurveyElements)) {
           m <- 0
-          if (is.list(q$SurveyElements$Payload[i][[1]])) {
+          if (is.list(q$SurveyElements[[i]]$Payload)) {
              # cat(paste("Compare ",qsfBlock," and ",q$SurveyElements$Payload[i][[1]]$DataExportTag,sep=""))
-             m <- length(grep(qsfBlock, q$SurveyElements$Payload[i][[1]]$DataExportTag))
+             m <- length(grep(qsfBlock, q$SurveyElements[[i]]$Payload$DataExportTag))
           }
           if (!(m == 0)) {
              # q$SurveyElements$Payload[i][[1]]$DataExportTag
@@ -221,8 +235,8 @@ writeIRAPfull <- function(
              cat(paste("Replacing ",qsfBlock,"\n",sep=""))
              qHTML <- paste(qsfBlock,'_h.txt',sep="")
              qJS <- paste(qsfBlock,'_J.txt',sep="")
-             q$SurveyElements$Payload[i][[1]]$QuestionText <- filecontent[[qHTML]]
-             q$SurveyElements$Payload[i][[1]]$QuestionJS <- filecontent[[qJS]]
+             q$SurveyElements[[i]]$Payload$QuestionText <- filecontent[[qHTML]]
+             q$SurveyElements[[i]]$Payload$QuestionJS <- filecontent[[qJS]]
              qsfPageReplaced[[qsfBlock]] <- 1
           } else {
              # if (exists("q$SurveyElements$Payload[i][[1]]$QuestionText") &&
@@ -259,21 +273,21 @@ writeIRAPfull <- function(
        }
     }
     
-    for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
-       if (is.character(q$SurveyElements$Payload$DataExportTag)) {
-          for (i in 1:length(q$SurveyElements$Payload$DataExportTag)) {
-             m <- length(grep(qsfBlock, q$SurveyElements$Payload$DataExportTag[i]))
-             if (!(m == 0)) {
-                cat(paste("Replacing ",qsfBlock,"\n",sep=""))
-                qHTML <- paste(qsfBlock,'_h.txt',sep="")
-                qJS <- paste(qsfBlock,'_J.txt',sep="")
-                q$SurveyElements$Payload$QuestionText[i] <- filecontent[[qHTML]]
-                q$SurveyElements$Payload$QuestionJS[i] <- filecontent[[qJS]]
-                qsfPageReplaced[[qsfBlock]] <- 1
-             }
-          }
-       }
-    }
+    # for (qsfBlock in c(qsfQSSP, qsfQSOP, qsfQSP, qsfQOP, qsfQST, qsfQOT)) {
+    #    if (is.character(q$SurveyElements$Payload$DataExportTag)) {
+    #       for (i in 1:length(q$SurveyElements$Payload$DataExportTag)) {
+    #          m <- length(grep(qsfBlock, q$SurveyElements$Payload$DataExportTag[i]))
+    #          if (!(m == 0)) {
+    #             cat(paste("Replacing ",qsfBlock,"\n",sep=""))
+    #             qHTML <- paste(qsfBlock,'_h.txt',sep="")
+    #             qJS <- paste(qsfBlock,'_J.txt',sep="")
+    #             q$SurveyElements$Payload$QuestionText[i] <- filecontent[[qHTML]]
+    #             q$SurveyElements$Payload$QuestionJS[i] <- filecontent[[qJS]]
+    #             qsfPageReplaced[[qsfBlock]] <- 1
+    #          }
+    #       }
+    #    }
+    # }
     
     err <- 0
     for (i in names(qsfPageReplaced)) { 

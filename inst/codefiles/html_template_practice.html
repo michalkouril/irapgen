@@ -29,9 +29,17 @@ div.lableft {
 
 div.labmid {
     position: absolute;
-    top: 1%;
+    top: 15%;
     left: 50%;
     transform: translate(-50%,0%);
+    text-align: center;
+    font-size: 72px;
+    font-weight: bold;
+    font-family: arial;
+}
+
+div.status {
+    line-height: 2;
     text-align: center;
     font-size: 30px;
     font-weight: bold;
@@ -42,7 +50,7 @@ div.ansright {
     position: absolute;
     top: 90%;
     right: 1%;
-    font-size: 18px;
+    font-size: 22px;
     text-align: center;
     font-family: arial;
     display: none;
@@ -53,7 +61,7 @@ div.ansleft {
     top: 90%;
     left: 1%;
     text-align: center;
-    font-size: 18px;
+    font-size: 22px;
     font-family: arial;   
     display: none;
 }
@@ -70,11 +78,11 @@ div.load {
 }
 
 div.instruct {
-    position: absolute;
+    /* position: absolute; */
     text-align: center;
     bottom: 0%;
-    font-size: 16px; 
-    font-family: "Times New Roman";
+    font-size: 24px; 
+    font-family: "Arial";
     display: none;
     padding-top: 10px; 
     padding-right: 10px;
@@ -87,8 +95,8 @@ h2.center {
     text-align: center;
     width: 100%;
     line-height: 100%;
-    top: 29%;
-    font-size: 30px; 
+    top: 45%;
+    font-size: 72px; 
     font-weight: bold;
     font-family: arial;
 }
@@ -109,18 +117,47 @@ h2.err {
     text-align: center;
     width: 100%;
     line-height: 100%;
-    bottom: 8%;
+    bottom: 45%;
     font-size: 80px; 
     font-weight: bold;
     font-family: arial;
     color: red;
 }
 
+div.direction {
+    float: left;
+    width: 40%;
+    padding: 20px;
+    text-align: left;
+    font-size: 18px;
+    font-family: arial;
+}
+
+div.helper {
+    padding: 20px;
+    text-align: right;
+    font-size: 24px;
+    font-family: arial;
+}
+
+div.tooSlow {
+    line-height: 2;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    font-family: arial;
+    color: black;
+}
 </style>
 
 <div class="border">
 
-<div class="labmid">
+<div>
+ <div class="direction" style="color: tgtCol;" id="directionMessage"></div>
+ <div class="helper" style="color: tgtCol;" id="helperMessage"></div>
+</div>
+
+<div class="status">
  <div style="color: tgtCol;" id="statusMessage"></div>
 </div>
 
@@ -138,7 +175,7 @@ h2.err {
  <div style="color: tgtCol;"><b>False</b></div>
 </div>
 
-<h2 class="center" id="lowerstim"><br><br><br>+</h2>
+<h2 class="center" id="lowerstim"><br><br><br></h2>
 <h2 class="err" id="error"></h2>
 
 <div class="load">
@@ -149,17 +186,20 @@ This should take less than 1 minute</p>
 </div>
 
 <div class="instruct" id="instructions">
-<p>Instructions: Place your left and right index fingers on the <span style="font-weight: strong">D</span> and <span style="font-weight: strong">K</span> keys.  If you make an error, a red <span style="font-weight: bold; color: red">X</span> will appear. You will be expected to correct the error before continuing.<!--errorins-->
+<p>Instructions: Place your left and right index fingers on the <span style="font-weight: strong">D</span> and <span style="font-weight: strong">K</span> keys.  If you make an error, a red <span style="font-weight: bold; color: red">X</span> will appear. You will be expected to correct the error before continuing.
 <br>
 <br>
 <br>
-Please try to go as <em>fast as you can</em> while making as few errors as possible.
+<br>
+Please try to go as fast as you can while making as few errors as possible.
 <br>
 <br>
-When you are ready, please press the [Space] bar to begin.
+<br>
+When you are ready, please press the Space bar to begin.
 <br>
 <br>
 Practice</p>
 </div>
 <p class="note" id="note"></p>
 </div>
+<div style="opacity: 0; font-size:300px"><p>x</p></div>
