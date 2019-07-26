@@ -27,15 +27,15 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	var loadedImages;
 	var input; 
 	var upperstim;
-   var statusMessage;
+  var statusMessage;
 	var stimuli = [];
 	var note;
 	var posstim;
 	var negstim;
 	var Astim;
 	var Bstim;
-   var ansleft;
-   var ansright;
+  var ansleft;
+  var ansright;
 
 	//USED FOR ALTERNATING TRIAL FORMAT ONLY
 	var tgts;
@@ -61,18 +61,19 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	qID = parseInt(qID);
 
 	// GRAB INPUITID AS REFERENCE TO QUESTION AND HIDE TEXT BOX
-   var InputId = document.getElementById("QR~QID" + qID);
+  var InputId = document.getElementById("QR~QID" + qID);
 	InputId.style.display="none";
 
 	// HIDE NEXT BUTTON
-   if (document.getElementById('NextButton')) document.getElementById('NextButton').style.display="none";
-   if (document.getElementById('PrevButton')) document.getElementById('PrevButton').style.display="none";
+  if (document.getElementById('NextButton')) document.getElementById('NextButton').style.display="none";
+  if (document.getElementById('PrevButton')) document.getElementById('PrevButton').style.display="none";
 	this.hideNextButton();
 	
 
-	//DECLARE FUNCTIONS
+ 	//DECLARE FUNCTIONS
+  function sortNumber(a,b) { return a - b; }
 
-   function setInitParams() {
+  function setInitParams() {
       // initParams exist
       if (typeof initParams == 'undefined' ) {
          console.log("initParams doesn't exist");
@@ -162,7 +163,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			}
 			
 			return array;
-		};
+		}
 
    // validate that the current ordering does not violate constraints
    function validateStimuliOrdering(array) {
@@ -184,21 +185,21 @@ Qualtrics.SurveyEngine.addOnload(function() {
    }
 	
 	// FUNCTION 1 - IMAGE LOADER
-	/* This function is the first command in the IAT. It is invoked by code at the bottom of this script 
+	/* This function is the first command in the IRAP. It is invoked by code at the bottom of this script 
 	and puts all image stimuli in an array called images. If the image_srcs object has no URLs in it, this skips ahead
-	to the next portion of the IAT without loading any images. If errors are encountered, the IAT block is skipped. */
+	to the next portion of the IRAP without loading any images. If errors are encountered, the IRAP block is skipped. */
 	function loadImages (image_srcs) {
 		var src, _i, _len;
 		
 		//If no images specified, skip this step
-		if(	image_srcs.length == 0) {return imagesLoaded();}
+		if(	image_srcs.length === 0) {return imagesLoaded();}
 		
 		images = [];
 		loadedImages = 0;
 				
 		for (_i = 0, _len = image_srcs.length; _i < _len; _i++) {
 			src = image_srcs[_i];
-			images.push(new Image);
+			images.push(new Image());
 
 			images[images.length - 1].src = src;
 			
@@ -209,24 +210,24 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			
 			images[images.length - 1].onload = function() {
 				loadedImages++;
-				if (loadedImages = images.length) return imagesLoaded();
+				if (loadedImages == images.length) return imagesLoaded();
 			};
 
 		}
 		return images;
-	};
+	}
 		
 	
 	// FUNCTION 2 - IMAGES LOADED
 	/* Runs when all image loader is finished, starts the keypress listener. 
-	For a forced-error-correction IAT, the last line should return keyCheckForcedError instead of keyCheck*/
+	For a forced-error-correction IRAP, the last line should return keyCheckForcedError instead of keyCheck*/
 	function imagesLoaded() {
 		document.getElementById('loading').style.display = 'none';
 		document.getElementById('instructions').style.display = 'block';
 
-		if (forceErrorCorrection==0) { return document.addEventListener('keyup', keyCheck, false); }
+		if (forceErrorCorrection === 0) { return document.addEventListener('keyup', keyCheck, false); }
 		else { return document.addEventListener('keyup', keyCheckForcedError, false); }
-	};
+	}
 	
 
 	// FUNCTION 3 - START FUNCTION
@@ -235,7 +236,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	so we can write data to the question by editing that value. It also sets instructions to null. It then shuffles stimuli and
 	starts the first trial. */
 	 function start() {
-        console.log("start");
+       console.log("start");
 
        endMessage=0;
 
@@ -249,7 +250,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
       var keyBtoPosStim;
       var keyBtoNegStim;
 
-      if (reverseAnswers==0) {
+      if (reverseAnswers === 0) {
          keyAtoPosStim=leftKey; 
          keyAtoNegStim=rightKey; 
          keyBtoPosStim=rightKey;
@@ -270,47 +271,51 @@ Qualtrics.SurveyEngine.addOnload(function() {
          shuffle(stimuli);
          shuffle(stimuli);
          shuffle(stimuli);
-         if (validateStimuliOrdering(stimuli)==0) continue;
+         if (validateStimuliOrdering(stimuli)===0) continue;
 	      break;
       }
 
-      if (stimuliShowCount != 0 && stimuliShowCount < stimuli.length) {
+      if (stimuliShowCount !== 0 && stimuliShowCount < stimuli.length) {
          stimuli.length = stimuliShowCount; // trim the length of the stimuli
       }
 
 		upperstim = document.getElementById("upperstim");
 		lowerstim = document.getElementById("lowerstim");
 		statusMessage = document.getElementById("statusMessage");
+		directionMessage = document.getElementById("directionMessage");
+		helperMessage = document.getElementById("helperMessage");
 		error = document.getElementById("error"); //USED ONLY WITH FORCED ERROR CORRECTION
 		input = document.getElementById("QR~QID" + qID);
-      input.value = ""; // MAKE SURE WE START WITH AN EMPTY OUTPUT
+    input.value = ""; // MAKE SURE WE START WITH AN EMPTY OUTPUT
 		ansleft = document.getElementById("ansleft");
 		ansright = document.getElementById("ansright");
 
-      // SHOW KEY INSTRUCTIONS
-      ansleft.style.display="block";
-      ansright.style.display="block";
+    // SHOW KEY INSTRUCTIONS
+    ansleft.style.display="block";
+    ansright.style.display="block";
 
 		//MAKE INSTRUCTIONS EMPTY
 		instructions.innerHTML = ""; 
-      statusMessage.innerHMTL = ""; 
+    statusMessage.innerHMTL = ""; 
+    directionMessage.innerHMTL = ""; 
+    helperMessage.innerHMTL = ""; 
 
 		//ADD NOTE BELOW WINDOW
 		note = document.getElementById("note");
 		note.innerHTML = "";
 
-      // COUNTER
-      countCorrect=0;
-      countTotal=0;
+    // COUNTER
+    countCorrect=0;
+    countTotal=0;
 		return nextQuestion();
-	};
+	}
 	
 	
 	// FUNCTION 4 - LAUNCHES QUESTION
 	/* This function runs on start() and after a new trial begins. If we have not depleted the stimuli object, it grabs (and removes)
-	the last trial from the stimuli object and calls it currentStimulus, then proceeds to use it for an IAT trial. A start time is
+	the last trial from the stimuli object and calls it currentStimulus, then proceeds to use it for an IRAP trial. A start time is
 	identified and the stimulus is shown (different methods for images or words). If the stimuli object is depleted, appends END
-	to data and advances to the next IAT block. */
+	to data and advances to the next IRAP block. */
 	  function nextQuestion() {
 		if (stimuli.length !==0) {
 
@@ -319,14 +324,24 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			// SET MESSAGE TO EMPTY
 			upperstim.innerHTML = "";
 			lowerstim.innerHTML = "";
+      directionMessage.innerHTML = "";
+      helperMessage.innerHTML = "";
 
-         console.log("trial "+currentStimulus.category+" "+currentStimulus.stimulus);
+      console.log("trial "+currentStimulus.category+" "+currentStimulus.stimulus);
 
 			// DECLARE START OF CURRENT STIMULUS
 			currentStimulus.start = new Date().getTime();
 
 			lowerstim.innerHTML += addlines + currentStimulus.category;
          upperstim.innerHTML += addlines + currentStimulus.stimulus;
+
+         if (reverseAnswers===0) {
+            directionMessage.innerHTML = "SAME Rule";
+            helperMessage.innerHTML = ""; //"Positive emotions = Good<br>Negative emotions = Bad";
+         } else {
+            directionMessage.innerHTML = "OPPOSITE Rule";
+            helperMessage.innerHTML = ""; //"Positive emotions = Bad<br>Negative emotions = Good";
+         }
 				
  			return;
 
@@ -338,8 +353,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
 
          upperstim.innerHTML = "";
          lowerstim.innerHTML = "";
-
-         function sortNumber(a,b) { return a - b; }
+         directionMessage.innerHTML = "";
+         helperMessage.innerHTML = "";
 
          responseList.sort(sortNumber);
          medianResponse = responseList[responseList.length/2];
@@ -392,9 +407,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	
 	// FUNCTION 5 - KEYPRESS LISTENER FOR STANDARD ERROR MODE
 	/* This function grabs whatever key was pressed and saves it as keyCode. Depending on what was pressed, it will
-	start the IAT, write data, display next trials, etc. Note that errors are handled by swapping the message out 
+	start the IRAP, write data, display next trials, etc. Note that errors are handled by swapping the message out 
 	for a red X (the error message below the stimulus is NOT used). Note also that an alternative version of this
-	function is defined below but only ONE will be called in a given IAT.*/
+	function is defined below but only ONE will be called in a given IRAP.*/
 	 function keyCheck(e) {
 		var keyCode;
 			
@@ -406,7 +421,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			keyCode = e.keyCode;
 		}
 			
-		// IF NO CURRENT STIMULUS (ONLY HAPPENS PRIOR TO START OF IAT), SPACEBAR CAN START IAT
+		// IF NO CURRENT STIMULUS (ONLY HAPPENS PRIOR TO START OF IRAP), SPACEBAR CAN START IRAP
        // OR AT THE END OF PRACTICE
 		if (!currentStimulus) {
 			if (keyCode === 32) {
@@ -440,9 +455,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
          countCorrect++;
          countTotal++;
          if (tooSlowMessageMS > 0 && currentStimulus.reactionTime>=tooSlowMessageMS) {
-            statusMessage.innerHTML = "too slow";
-			   // error.innerHTML = "too slow";
-            setTimeout(function() {statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
+            // statusMessage.innerHTML = "too slow";
+			   error.innerHTML = "too slow";
+            setTimeout(function() {error.innerHTML="";statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
          } else {
 			   // error.innerHTML = "";
          }
@@ -454,9 +469,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			currentStimulus = null;
          countTotal++;
          if (tooSlowMessageMS > 0 && currentStimulus.reactionTime>=tooSlowMessageMS) {
-            statusMessage.innerHTML = "too slow";
-			   // error.innerHTML = "too slow";
-            setTimeout(function() {statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
+            // statusMessage.innerHTML = "too slow";
+			   error.innerHTML = "too slow";
+            setTimeout(function() {error.innerHTML="";statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
          } else {
 			   // error.innerHTML = "";
          }
@@ -483,7 +498,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			keyCode = e.keyCode;
 		}
 			
-		// IF NO CURRENT STIMULUS (ONLY HAPPENS PRIOR TO START OF IRAP, OR AFTER END MESSAGE STATS), SPACEBAR CAN START IAT
+		// IF NO CURRENT STIMULUS (ONLY HAPPENS PRIOR TO START OF IRAP, OR AFTER END MESSAGE STATS), SPACEBAR CAN START IRAP
 		if (!currentStimulus) {
 			if (keyCode === 32) {
             if (endMessage==1) {
@@ -522,14 +537,15 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			}
 
          if (tooSlowMessageMS > 0 && currentStimulus.reactionTime>=tooSlowMessageMS) {
-            statusMessage.innerHTML = "too slow";
-			   // error.innerHTML = "too slow";
-            setTimeout(function() {statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
+            // statusMessage.innerHTML = "too slow";
+			   error.innerHTML = "<div class='tooSlow'>too slow</div>";
+            setTimeout(function() {error.innerHTML="";statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
+         } else {
+            error.innerHTML = "";
          }
 			// upperstim.innerHTML = "<br><br><br>+";
 			fix=0;
 			currentStimulus = null;
-			error.innerHTML = "";
 			return setTimeout(function() {return nextQuestion(); }, interQuestionDelay);
 	
 		} else {
@@ -561,7 +577,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
    // setInitParams
 	
 
-	//  IAT CONTENTS 
+	//  IRAP CONTENTS 
 	
 	//IMAGE URLS
 	/* Consists of all pos, neg, A, and B images (in that order). */

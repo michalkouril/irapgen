@@ -219,6 +219,9 @@ D1_df <-
          D1) %>%
   ungroup()
 
+
+if (nrow(filtered_cleaned_df)>0) {
+  
 # D1 calculated for each of the four trial-types from all test block rts
 D1_by_tt_df <-  
   filtered_cleaned_df %>%
@@ -242,8 +245,13 @@ D1_by_tt_df <-
                 D1_trial_type_2 = `2`,
                 D1_trial_type_3 = `3`,
                 D1_trial_type_4 = `4`)
+} else {
+  D1_by_tt_df <- data.frame(unique_identifier=1,D1_trial_type_1=1,D1_trial_type_2=2,
+                            D1_trial_type_3=3,D1_trial_type_4=4)
+}
 
-
+if (nrow(filtered_cleaned_df)>0) {
+  
 # D1 calculated for each stimuli from all test block rts
 D1_by_stim_df <-  
   filtered_cleaned_df %>%
@@ -263,6 +271,9 @@ D1_by_stim_df <-
          D1_by_stim) %>%
   dplyr::summarize(D1_by_stim = round(mean(D1_by_stim), 3)) %>%
   spread(stimulus, D1_by_stim) 
+} else {
+  D1_by_stim_df <- data.frame(unique_identifier=1)
+}
 
 # pos stim
 posstim <- sort(unlist(unique(cleaned_df[cleaned_df$trial_type %in% c(1,3),'stimulus'])))
@@ -376,6 +387,8 @@ D_df <-
   D1_df %>% 
   dplyr::summarize(D = round(mean(D1, na.rm=TRUE),3))
 
+if (nrow(filtered_cleaned_df)>0) {
+  
 D_by_tt_df <-
   D1_by_tt_df %>% 
   ungroup() %>%
@@ -383,7 +396,9 @@ D_by_tt_df <-
                    D_trial_type_2 = round(mean(D1_trial_type_2, na.rm = TRUE),3),
                    D_trial_type_3 = round(mean(D1_trial_type_3, na.rm = TRUE),3), 
                    D_trial_type_4 = round(mean(D1_trial_type_4, na.rm = TRUE),3))
-
+} else {
+  D_by_tt_df <- data.frame() 
+}
 D_by_stim_df <-
   D1_by_stim_df[,-1] %>% 
   ungroup() %>%

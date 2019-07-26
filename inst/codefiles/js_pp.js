@@ -9,8 +9,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
    var stimuliShowCount=0; // 0 -- show all combinations 2*(Astim + Bstim)
    var leftKeyChar="D";
    var rightKeyChar="K";
-   var tooSlowMessageMS=2000; // show "too slow" upperstim if tooSlowMessageMS response time exceeded
-   var tooSlowMessageShowTimeMS=600; // show "too slow" upperstim for this amount of time
+   var tooSlowMessageMS=2000; // show "too slow" message if tooSlowMessageMS response time exceeded
+   var tooSlowMessageShowTimeMS=600; // show "too slow" message for this amount of time
    var practiceMode=1; // evaluate responses to pass practice (append ,OK if success)
    var practiceSuccessThreasholdCorrect=0.80; // minimum % of correct answers to pass practice
    var practiceSuccessThreasholdMedianMS=2000; // minimum median time to pass practice
@@ -44,7 +44,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	var catnum = [];
 	
 	//DEFINE addlines. THIS WILL BE PUT IN FRONT OF WORD STIMULI TO DROP THEM DOWN TO BETTER ALIGN WITH IMAGE CENTERS.
- 	var addlines="<br><br><br>";	
+ 	var addlines="<br>"; // add more if font smaller (30px + "<br>";)	
 	
 	// THE FOLLOWING ARE ONLY USED IF FORCED ERROR CORRECTION IS ENABLED
 	var fix = 0;
@@ -184,9 +184,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
    }
 	
 	// FUNCTION 1 - IMAGE LOADER
-	/* This function is the first command in the IAT. It is invoked by code at the bottom of this script 
+	/* This function is the first command in the IRAP. It is invoked by code at the bottom of this script 
 	and puts all image stimuli in an array called images. If the image_srcs object has no URLs in it, this skips ahead
-	to the next portion of the IAT without loading any images. If errors are encountered, the IAT block is skipped. */
+	to the next portion of the IRAP without loading any images. If errors are encountered, the IRAP block is skipped. */
 	function loadImages (image_srcs) {
 		var src, _i, _len;
 		
@@ -203,7 +203,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			images[images.length - 1].src = src;
 			
 			images[images.length - 1].onerror = function() {
-				alert("Your web browser encountered an issue running this portion of the study. You will be skipped ahead. You may have to click through this upperstim several times.");
+				alert("Your web browser encountered an issue running this portion of the study. You will be skipped ahead. You may have to click through this message several times.");
             if (document.getElementById('NextButton')) document.getElementById('NextButton').click();
 			};
 			
@@ -219,7 +219,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	
 	// FUNCTION 2 - IMAGES LOADED
 	/* Runs when all image loader is finished, starts the keypress listener. 
-	For a forced-error-correction IAT, the last line should return keyCheckForcedError instead of keyCheck*/
+	For a forced-error-correction IRAP, the last line should return keyCheckForcedError instead of keyCheck*/
 	function imagesLoaded() {
 		document.getElementById('loading').style.display = 'none';
 		document.getElementById('instructions').style.display = 'block';
@@ -231,7 +231,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 
 	// FUNCTION 3 - START FUNCTION
 	/* Runs when the spacebar is pressed after the keypress listener has begun. Does initial houskeeping (grabs HTML content
-	such as upperstim, error, etc. and makes it so we can write to them). It sets as 'input' the contents of the question text box,
+	such as message, error, etc. and makes it so we can write to them). It sets as 'input' the contents of the question text box,
 	so we can write data to the question by editing that value. It also sets instructions to null. It then shuffles stimuli and
 	starts the first trial. */
 	 function start() {
@@ -274,13 +274,15 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	      break;
       }
 
-      if (stimuliShowCount != 0 && stimuliShowCount < stimuliCount) {
+      if (stimuliShowCount != 0 && stimuliShowCount < stimuli.length) {
          stimuli.length = stimuliShowCount; // trim the length of the stimuli
       }
 
 		upperstim = document.getElementById("upperstim");
 		lowerstim = document.getElementById("lowerstim");
 		statusMessage = document.getElementById("statusMessage");
+		directionMessage = document.getElementById("directionMessage");
+		helperMessage = document.getElementById("helperMessage");
 		error = document.getElementById("error"); //USED ONLY WITH FORCED ERROR CORRECTION
 		input = document.getElementById("QR~QID" + qID);
       input.value = ""; // MAKE SURE WE START WITH AN EMPTY OUTPUT
@@ -294,6 +296,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
 		//MAKE INSTRUCTIONS EMPTY
 		instructions.innerHTML = ""; 
       statusMessage.innerHMTL = ""; 
+      directionMessage.innerHMTL = ""; 
+      helperMessage.innerHMTL = ""; 
 
 		//ADD NOTE BELOW WINDOW
 		note = document.getElementById("note");
@@ -308,9 +312,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	
 	// FUNCTION 4 - LAUNCHES QUESTION
 	/* This function runs on start() and after a new trial begins. If we have not depleted the stimuli object, it grabs (and removes)
-	the last trial from the stimuli object and calls it currentStimulus, then proceeds to use it for an IAT trial. A start time is
+	the last trial from the stimuli object and calls it currentStimulus, then proceeds to use it for an IRAP trial. A start time is
 	identified and the stimulus is shown (different methods for images or words). If the stimuli object is depleted, appends END
-	to data and advances to the next IAT block. */
+	to data and advances to the next IRAP block. */
 	  function nextQuestion() {
 		if (stimuli.length !==0) {
 
@@ -319,6 +323,8 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			// SET MESSAGE TO EMPTY
 			upperstim.innerHTML = "";
 			lowerstim.innerHTML = "";
+         directionMessage.innerHTML = "";
+         helperMessage.innerHTML = "";
 
          console.log("trial "+currentStimulus.category+" "+currentStimulus.stimulus);
 
@@ -327,6 +333,14 @@ Qualtrics.SurveyEngine.addOnload(function() {
 
 			lowerstim.innerHTML += addlines + currentStimulus.category;
          upperstim.innerHTML += addlines + currentStimulus.stimulus;
+
+         if (reverseAnswers==0) {
+            directionMessage.innerHTML = "SAME Rule";
+            helperMessage.innerHTML = "Positive emotions = Good<br>Negative emotions = Bad";
+         } else {
+            directionMessage.innerHTML = "OPPOSITE Rule";
+            helperMessage.innerHTML = "Positive emotions = Bad<br>Negative emotions = Good";
+         }
 				
  			return;
 
@@ -338,7 +352,12 @@ Qualtrics.SurveyEngine.addOnload(function() {
 
          upperstim.innerHTML = "";
          lowerstim.innerHTML = "";
-         responseList.sort();
+         directionMessage.innerHTML = "";
+         helperMessage.innerHTML = "";
+
+         function sortNumber(a,b) { return a - b; }
+
+         responseList.sort(sortNumber);
          medianResponse = responseList[responseList.length/2];
 			input.value += "END";
          if (practiceMode==1 && medianResponse <= practiceSuccessThreasholdMedianMS && countCorrect/countTotal >= practiceSuccessThreasholdCorrect) {
@@ -350,8 +369,23 @@ Qualtrics.SurveyEngine.addOnload(function() {
             currentStimulus=0;
             endMessage=1;
             setTimeout(function() {
-               statusMessage.innerHTML = "Success rate: "+Math.round(100*countCorrect/countTotal)+"%<br>Median response: "+medianResponse+ "ms";
-               upperstim.innerHTML = "Press <b>space</b> to continue.";
+               if (medianResponse <= practiceSuccessThreasholdMedianMS && countCorrect/countTotal >= practiceSuccessThreasholdCorrect) {
+                   statusMessage.innerHTML="You’re doing great!";
+               } else {
+                 if (countCorrect/countTotal >= practiceSuccessThreasholdCorrect) {
+                   statusMessage.innerHTML="<br>";
+                 } else {
+                   statusMessage.innerHTML="Be a little more accurate.<br>";
+                 }
+                 if (medianResponse <= practiceSuccessThreasholdMedianMS) {
+                   statusMessage.innerHTML+="Your speed is great!";
+                 } else {
+                   statusMessage.innerHTML+="Try to be a little bit faster.";
+                 }
+               }
+               // statusMessage.innerHTML = "Success rate: "+Math.round(100*countCorrect/countTotal)+"%<br>Median response: "+medianResponse+ "ms";
+               
+               lowerstim.innerHTML = "<p style='font-size:30px'>Press <b>space</b> to continue.</p>";
                /*setTimeout(function() {
                   if (document.getElementById('NextButton')) document.getElementById('NextButton').click();
                }, practiceStatsTimeMS);
@@ -374,9 +408,9 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	
 	// FUNCTION 5 - KEYPRESS LISTENER FOR STANDARD ERROR MODE
 	/* This function grabs whatever key was pressed and saves it as keyCode. Depending on what was pressed, it will
-	start the IAT, write data, display next trials, etc. Note that errors are handled by swapping the upperstim out 
-	for a red X (the error upperstim below the stimulus is NOT used). Note also that an alternative version of this
-	function is defined below but only ONE will be called in a given IAT.*/
+	start the IRAP, write data, display next trials, etc. Note that errors are handled by swapping the message out 
+	for a red X (the error message below the stimulus is NOT used). Note also that an alternative version of this
+	function is defined below but only ONE will be called in a given IRAP.*/
 	 function keyCheck(e) {
 		var keyCode;
 			
@@ -388,7 +422,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			keyCode = e.keyCode;
 		}
 			
-		// IF NO CURRENT STIMULUS (ONLY HAPPENS PRIOR TO START OF IAT), SPACEBAR CAN START IAT
+		// IF NO CURRENT STIMULUS (ONLY HAPPENS PRIOR TO START OF IRAP), SPACEBAR CAN START IRAP
        // OR AT THE END OF PRACTICE
 		if (!currentStimulus) {
 			if (keyCode === 32) {
@@ -417,14 +451,14 @@ Qualtrics.SurveyEngine.addOnload(function() {
 		//TRADITIONAL ERROR MODE
 		if (keyCode === currentStimulus.correct) {				
 			input.value += currentStimulus.trialType + "T" + currentStimulus.index + "C" + currentStimulus.reactionTime + ",";	
-			upperstim.innerHTML = "<br><br><br>+";
+			upperstim.innerHTML = "<br><br><br>";
 			currentStimulus = null;
          countCorrect++;
          countTotal++;
-         if (currentStimulus.reactionTime>=tooSlowMessageMS) {
-            statusMessage.innerHTML = "too slow";
-			   // error.innerHTML = "too slow";
-            setTimeout(function() {statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
+         if (tooSlowMessageMS > 0 && currentStimulus.reactionTime>=tooSlowMessageMS) {
+            // statusMessage.innerHTML = "too slow";
+			   error.innerHTML = "too slow";
+            setTimeout(function() {error.innerHTML="";statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
          } else {
 			   // error.innerHTML = "";
          }
@@ -432,13 +466,13 @@ Qualtrics.SurveyEngine.addOnload(function() {
 	
 		} else {
 			input.value += currentStimulus.trialType + "T" + currentStimulus.index + "X" + currentStimulus.reactionTime + ",";
-			upperstim.innerHTML = "<b style='color:red;font-size:80px'><br><br>X</b>";
+			upperstim.innerHTML = "<br><br><br>+<b style='color:red;font-size:80px'><br><br>X</b>";
 			currentStimulus = null;
          countTotal++;
-         if (currentStimulus.reactionTime>=tooSlowMessageMS) {
-            statusMessage.innerHTML = "too slow";
-			   // error.innerHTML = "too slow";
-            setTimeout(function() {statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
+         if (tooSlowMessageMS > 0 && currentStimulus.reactionTime>=tooSlowMessageMS) {
+            // statusMessage.innerHTML = "too slow";
+			   error.innerHTML = "too slow";
+            setTimeout(function() {error.innerHTML="";statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
          } else {
 			   // error.innerHTML = "";
          }
@@ -465,7 +499,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
 			keyCode = e.keyCode;
 		}
 			
-		// IF NO CURRENT STIMULUS (ONLY HAPPENS PRIOR TO START OF IRAP, OR AFTER END MESSAGE STATS), SPACEBAR CAN START IAT
+		// IF NO CURRENT STIMULUS (ONLY HAPPENS PRIOR TO START OF IRAP, OR AFTER END MESSAGE STATS), SPACEBAR CAN START IRAP
 		if (!currentStimulus) {
 			if (keyCode === 32) {
             if (endMessage==1) {
@@ -503,15 +537,15 @@ Qualtrics.SurveyEngine.addOnload(function() {
             countTotal++;
 			}
 
-         if (currentStimulus.reactionTime>=tooSlowMessageMS) {
-            statusMessage.innerHTML = "too slow";
-			   // error.innerHTML = "too slow";
-            setTimeout(function() {statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
+         if (tooSlowMessageMS > 0 && currentStimulus.reactionTime>=tooSlowMessageMS) {
+            // statusMessage.innerHTML = "too slow";
+			   error.innerHTML = "<div class='tooSlow'>too slow</div>";
+            setTimeout(function() {error.innerHTML="";statusMessage.innerHTML="";}, tooSlowMessageShowTimeMS);
          }
 			// upperstim.innerHTML = "<br><br><br>+";
 			fix=0;
 			currentStimulus = null;
-			error.innerHTML = "";
+			// error.innerHTML = "";
 			return setTimeout(function() {return nextQuestion(); }, interQuestionDelay);
 	
 		} else {
@@ -543,7 +577,7 @@ Qualtrics.SurveyEngine.addOnload(function() {
    // setInitParams
 	
 
-	//  IAT CONTENTS 
+	//  IRAP CONTENTS 
 	
 	//IMAGE URLS
 	/* Consists of all pos, neg, A, and B images (in that order). */
