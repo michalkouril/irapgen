@@ -81,7 +81,11 @@ id_string_arr <-
 
 id_string_df<-as.data.frame(id_string_arr)
 rownames(id_string_df) <- id_string_df$unique_identifier
-t_id_string_df<-t(as.data.frame(id_string_df$block_arr))  
+
+median_len <- median(t(as.data.frame(lapply(id_string_df$block_arr, length))))
+t_id_string_df<-t(as.data.frame(lapply(id_string_df$block_arr, function(x) { x[1:median_len]})))
+
+# t_id_string_df<-t(as.data.frame(id_string_df$block_arr))  
 rownames(t_id_string_df)<- rownames(id_string_df)
 long_id_string_df<-melt(t_id_string_df)
 colnames(long_id_string_df) <- c("unique_identifier", "trial_order", "response")
