@@ -24,10 +24,7 @@
 # packages <- c("plyr", "dplyr", "tidyr")
 # auto_install_dependencies(packages)
 
-library(plyr)
-library(dplyr)
-library(tidyr)
-library(reshape2)
+
 
 # NB Given the shared namespaces between plyr and dplyr (e.g., both 
 # contain functions called "rename"), this script specifies which 
@@ -41,6 +38,24 @@ library(reshape2)
 # processIRAPDataQualtrics(input_csv)
 
 # expects data from qualtrics with PP1,PN1,PP2,PN2,PP3,PN3,TP1,TN1,TP2,TN2,TP3,TN3 columns
+
+#' @title processIRAPDataQualtrics
+#' @param data Input data
+#' @param unique_identifier_column Unique identifier column
+#' @param timeout.drop Whether to drop long trials
+#' @param timeout.ms Timeout threashold to drop trial
+#' @param fasttrial.drop Whether to drop short trials
+#' @param fasttrial.ms Fast trial time threashold
+#' @param fastprt.drop fastprt.drop
+#' @param fastprt.percent Fast trial percentage to drop participant
+#' @param fastprt.ms Fast trial threashold
+#' @import dplyr
+#' @importFrom plyr join_all
+#' @import tidyr
+#' @import reshape2
+#' @importFrom stats median sd rt
+#' 
+#' @export
 processIRAPDataQualtrics <- function(data, 
                          unique_identifier_column="V1",
                          timeout.drop=TRUE, 
@@ -50,11 +65,6 @@ processIRAPDataQualtrics <- function(data,
                          fastprt.drop=TRUE, 
                          fastprt.percent=.10, 
                          fastprt.ms=300) {
-  
-  library(plyr)
-  library(dplyr)
-  library(tidyr)
-  library(reshape2)
 
 
 data_format <- "^([0-9])[T]([0-9]*)([CX])([0-9]*)$"
@@ -125,7 +135,7 @@ cleaned_df <-long_data_df %>%
     stimulus_b=ifelse(trial_block_type=='B',as.integer(gsub(data_format,"\\2", response)),NA)
   ) %>%
   rowwise() %>%
-  dplyr::mutate(
+  dplyr::mutate(  # only one side is always present A or B -- so sum will return one info 
     rt = sum(rt_a, rt_b, na.rm=TRUE),
     trial_type=sum(trial_type_a,trial_type_b,na.rm=TRUE),
     accuracy = sum(accuracy_a, accuracy_b, na.rm=TRUE),

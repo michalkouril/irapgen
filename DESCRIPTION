@@ -14,5 +14,5 @@ Imports:
     dplyr,
     tidyr,
     reshape2
-RoxygenNote: 5.0.1
+RoxygenNote: 7.0.2
 Suggests: testthat

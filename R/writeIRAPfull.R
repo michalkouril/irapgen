@@ -1,8 +1,40 @@
 #' 
-#' writeIRAPfull
 #' 
-#' writeIRAPfull(poswords=c("pos1"),negwords=c("neg1"),Awords=c("a1","a2","a3"),Bwords=c("b1","b2","b3"),qsf=TRUE)
+#' @title writeIRAPfull
+#' @param IRAPname IRAP name
+#' @param catCol Category color
+#' @param poswords poswords
+#' @param negwords negwords
+#' @param tgtCol Target color
+#' @param Awords Awords
+#' @param Bwords Bwords
+#' @param qsf Generate QSF
+#' @param qsfTemplate QSF template (if other than default)
+#' @param pause pause
+#' @param stimuliShowCount stimuliShowCount
+#' @param stimuliShowShortPracticeCount stimuliShowShortPracticeCount
+#' @param correct.error correct.error
+#' @param tooSlowMessagePractice tooSlowMessagePractice
+#' @param tooSlowMessageTest tooSlowMessageTest
+#' @param tooSlowMessageMS tooSlowMessageMS
+#' @param tooSlowMessageShowTimeMS tooSlowMessageShowTimeMS
+#' @param practiceSuccessThreasholdCorrect practiceSuccessThreasholdCorrect
+#' @param practiceSuccessThreasholdMedianMS practiceSuccessThreasholdMedianMS
+#' @param showPracticeStats showPracticeStats
+#' @param qsfQSSP qsfQSSP
+#' @param qsfQSOP qsfQSOP
+#' @param qsfQSP qsfQSP
+#' @param qsfQOP qsfQOP
+#' @param qsfQST qsfQST
+#' @param qsfQOT qsfQOT
+#' @import jsonlite
+#' @examples 
+#' writeIRAPfull(poswords=c("pos1"),negwords=c("neg1"),
+#'               Awords=c("a1","a2","a3"),Bwords=c("b1","b2","b3"),
+#'               qsf=TRUE)
+#'
 #' 
+#' @export
 writeIRAPfull <- function(
                          IRAPname="IRAP", 
                          catCol="green",
@@ -33,8 +65,6 @@ writeIRAPfull <- function(
                          
 ) {
 
-    library(jsonlite)
-  
     cat("writeIRAPfull\n")
 
     # FIXME: add allowed characters checking
@@ -186,7 +216,7 @@ writeIRAPfull <- function(
   if(qsf==T){
     
     if (is.null(qsfTemplate)) {
-      qsfTemplate=system.file("codefiles", "IRAP_V12.qsf", package="irapgen")
+      qsfTemplate=system.file("codefiles", "IRAP_V13_cb.qsf", package="irapgen")
     }
 
     cat(paste("Parse QSF template ", qsfTemplate, "\n"))
@@ -197,8 +227,6 @@ writeIRAPfull <- function(
     filename = function() {
       paste('IRAP-', irapname, '.qsf', sep='')
     }
-    
-    library(jsonlite)
     
     q <- fromJSON(qsfTemplate, simplifyVector = FALSE)
     
