@@ -216,7 +216,7 @@ writeIRAPfull <- function(
   if(qsf==T){
     
     if (is.null(qsfTemplate)) {
-      qsfTemplate=system.file("codefiles", "IRAP_V13_cb.qsf", package="irapgen")
+      qsfTemplate=system.file("codefiles", "IRAP_V13n_cb.qsf", package="irapgen")
     }
 
     cat(paste("Parse QSF template ", qsfTemplate, "\n"))
