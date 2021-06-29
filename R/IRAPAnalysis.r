@@ -57,7 +57,7 @@
 #' 
 #' @export
 processIRAPDataQualtrics <- function(data, 
-                         unique_identifier_column="V1",
+                         unique_identifier_column="ResponseId",
                          timeout.drop=TRUE, 
                          timeout.ms=10000, 
                          fasttrial.drop=FALSE, 
@@ -76,9 +76,7 @@ data_format <- "^([0-9])[T]([0-9]*)([CX])([0-9]*)$"
 
 IRAPretrieve <- function(data, unique_identifier, block, block_pair, 
                          trial_block_type, block_pair_num) {
-
-# Add condition if column V1 exists
-data<-data[data$V1!='ResponseID',]   
+ 
 data['unique_identifier']<-data[unique_identifier]
 data['block']<-data[block]
 id_string_arr <- 
@@ -109,18 +107,18 @@ long_id_string_df
 }
 
 long_data_df<-
-rbind(IRAPretrieve(data, "V1", "PP1", "P", "A", 1),
-      IRAPretrieve(data, "V1", "PN1", "P", "B", 1),
-      IRAPretrieve(data, "V1", "PP2", "P", "A", 2),
-      IRAPretrieve(data, "V1", "PN2", "P", "B", 2),
-      IRAPretrieve(data, "V1", "PP3", "P", "A", 3),
-      IRAPretrieve(data, "V1", "PN3", "P", "B", 3),
-      IRAPretrieve(data, "V1", "TP1", "T", "A", 1),
-      IRAPretrieve(data, "V1", "TN1", "T", "B", 1),
-      IRAPretrieve(data, "V1", "TP2", "T", "A", 2),
-      IRAPretrieve(data, "V1", "TN2", "T", "B", 2),
-      IRAPretrieve(data, "V1", "TP3", "T", "A", 3),
-      IRAPretrieve(data, "V1", "TN3", "T", "B", 3)
+rbind(IRAPretrieve(data, unique_identifier_column, "PP1", "P", "A", 1),
+      IRAPretrieve(data, unique_identifier_column, "PN1", "P", "B", 1),
+      IRAPretrieve(data, unique_identifier_column, "PP2", "P", "A", 2),
+      IRAPretrieve(data, unique_identifier_column, "PN2", "P", "B", 2),
+      IRAPretrieve(data, unique_identifier_column, "PP3", "P", "A", 3),
+      IRAPretrieve(data, unique_identifier_column, "PN3", "P", "B", 3),
+      IRAPretrieve(data, unique_identifier_column, "TP1", "T", "A", 1),
+      IRAPretrieve(data, unique_identifier_column, "TN1", "T", "B", 1),
+      IRAPretrieve(data, unique_identifier_column, "TP2", "T", "A", 2),
+      IRAPretrieve(data, unique_identifier_column, "TN2", "T", "B", 2),
+      IRAPretrieve(data, unique_identifier_column, "TP3", "T", "A", 3),
+      IRAPretrieve(data, unique_identifier_column, "TN3", "T", "B", 3)
 )
 
 cleaned_df <-long_data_df %>% 
