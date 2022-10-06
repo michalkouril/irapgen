@@ -217,8 +217,8 @@ mean_rt_df <-
 # D1 calculated from all test block rts
 D1_df <-  
   filtered_cleaned_df %>%
-  group_by(unique_identifier,
-           test_block_pair) %>%
+  # group_by(unique_identifier, test_block_pair) %>%
+  group_by(unique_identifier) %>%
   dplyr::summarize(rt_a_mean = mean(rt_a, na.rm = TRUE),
                    rt_b_mean = mean(rt_b, na.rm = TRUE),
                    rt_sd = sd(rt)) %>%
@@ -237,9 +237,8 @@ if (nrow(filtered_cleaned_df)>0) {
 # D1 calculated for each of the four trial-types from all test block rts
 D1_by_tt_df <-  
   filtered_cleaned_df %>%
-  group_by(unique_identifier,
-           test_block_pair,
-           trial_type) %>%
+  # group_by(unique_identifier, test_block_pair, trial_type) %>%
+  group_by(unique_identifier, trial_type) %>%
   dplyr::summarize(rt_a_mean = mean(rt_a, na.rm = TRUE),
                    rt_b_mean = mean(rt_b, na.rm = TRUE),
                    rt_sd = sd(rt)) %>%
